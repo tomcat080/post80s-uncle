@@ -2,7 +2,7 @@
 
 - 设备：Xiaomi POCO F1（beryllium / SDM845 / 1080×2246），fastboot serial `2b8c9438`（另一台 `ad75c25f` 不属于本批，全程未触碰）
 - 移植谱系：`ry-diffusion/Bergamota` main —— iOS 16.7.16 用户空间（iPhone X d22ap，未改动）+ xnu-8796.141.3 开发内核，**纯 CPU 渲染，无 GPU 驱动**
-- 状态：真机已进过锁屏与桌面，USB 网络 + SSH 可完全操作；蓝牙用户态 `bluetoothd` 仍未接管 HCI 传输；内核重建通道已打通
+- 状态：真机已进过锁屏与桌面，USB 网络 + SSH 可完全操作；蓝牙用户态 `bluetoothd` 未接管 HCI（会 SIGBUS 崩溃，其 `BlueTool -R` 不走我们的 kctl）；自编 `btscan` 已能真实扫到周边 BLE 设备；内核重建通道已打通
 - 记录时间：2026-11-22（覆盖 2026-11-14 → 11-22 全过程）
 
 > 铁律：**UI 只认真机屏幕**。同一镜像在别处（QEMU / 截图 / 别人机器）表现如何都不作数。
@@ -40,7 +40,8 @@ poco-f1/ios16/
 | Shell 可用性 | ✅ | toybox 无 `sh` applet，已用自编 `minish` V3 覆盖 `/usr/local/bin/sh`（支持 `$(...)`、glob、fd 重定向、16KiB 行缓冲） |
 | 内核日志 | ✅ | 内核把 console 以 UDP 发到 `192.168.7.1:5140`，Mac 侧 python 收包即可 |
 | 蓝牙硬件链 | ✅ | WCN3990 上电、`crbtfw21.tlv`/`crnv21.bin` 下载、3 Mbaud、BD_ADDR 改写全部成功；`hcitest` 实测 HCI Reset/Read Local Version/Read BD_ADDR 全 `status 0` |
-| 蓝牙用户态 | ❌ | `bluetoothd` 已不再秒退并会拉起 `BlueTool`，但仍未打开 HCI 传输；卡在沙盒特权与后续初始化 |
+| 蓝牙用户态 | ⚠️ | `bluetoothd` 已不再秒退、会拉起 `BlueTool`，但自己约 53 秒一次 SIGBUS（`EXC_BAD_ACCESS` @ dyld private memory+8）；它派生的 `BlueTool -R` 常驻却从不打开 kctl —— 它的传输不是我们这条通道 |
+| BLE 扫描（自编 `btscan`） | ✅ | LE Set Scan Params / Enable 全 `status 0`；12 秒收到 **203 条广播 / 6 台设备**，含设备名 `Galaxy Fit2 (0E14)`，RSSI −41…−82 dBm |
 | Wi-Fi | ⏸ | `sweetwlan=1` 探针跑过；P3（MSS 内存池 + hyp-assign + MBA）未开工，风险 high |
 | 音频 | ❌ | 无驱动；`VirtualAudio` 已移入 `HAL.disabled` 绕过崩溃 |
 | 内核重建 | ✅ | 自建 `tomcat080/ios-xnu` + Actions，**约 10 分钟出内核**；补丁集与在跑内核同源 |

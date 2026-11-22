@@ -134,3 +134,71 @@ CTLIOCGINFO com.apple.uart.bluetooth: No such file or directory (is sweetbt=1 up
 
 本轮 console 里 `bluetoothd` 侧只见到 1 次 `exec BlueTool`，**没有**出现上一轮那两条 `SWEET Sandbox: bluetoothd privilege 12000/1002 denied`；设备上没有 `ps`，存活与否无法直接确认，仍需先做"kctl open 打进程名"那个补丁才能定论。
 
+## 七、2026-11-22 深夜：bluetoothd 的真死因与 BLE 扫描突破
+
+### 7.1 `bluetoothd` 不是"退出"，是 **SIGBUS 崩溃**
+
+从设备上翻到的崩溃报告（`/var/mobile/Library/Logs/CrashReporter/bluetoothd-*.ips`）：
+
+```
+"exception": {"codes":"0x0000000000000005, 0x0000000100f7c008",
+              "type":"EXC_BAD_ACCESS", "signal":"SIGBUS",
+              "subtype":"UNKNOWN_0x5 at 0x0000000100f7c008"},
+"termination": {"code":10, "indicator":"Bus error: 10"},
+"procLaunch": "21:38:11.6846", "captureTime": "21:39:04.1544",   ← 活了 ~53 s
+"consecutiveCrashCount": 3, "throttleTimeout": 10,
+"vmRegionInfo": "0x100f7c008 is in 0x100f7c000-0x100fbc000 … dyld private memory"
+```
+
+即：**进程活得比想象久（约 53 秒），然后崩在 dyld 自己的私有内存页（+8 字节）上**，不是之前那种 0.2 秒 `rc=1` 的干净退出。launchd 按 `consecutiveCrashCount=3 / throttleTimeout=10` 每 10 秒重启它，于是形成"反复拉起 → 约 1 分钟崩一次"的循环。
+
+注意报告里 `usedImages` 全空、`thread_get_state` 三个端口都 invalid —— 这个移植的崩溃采集器读不到尸体栈，所以拿不到 backtrace，只能靠地址区间判断。
+
+### 7.2 它到底在干什么：`BlueTool -R`
+
+设备上没有 `ps`/`lsof`/`dtrace`，但可以把 `BlueTool` 换成同名包装器（adhoc 签名的 arm64 小程序，记 argv 后 `execv` 真身），零成本看清调用：
+
+```c
+/* /usr/sbin/BlueTool 换成包装器后抓到的 */
+pid=746 argc=2 [/usr/sbin/BlueTool] [-R]
+pid=762 argc=2 [/usr/sbin/BlueTool] [-R]
+pid=775 argc=2 [/usr/sbin/BlueTool] [-R]
+```
+
+- 参数就是 **`-R`**，96 秒内 3 次；换成包装器之前一轮 5 分钟里是 **83 次**（几乎每 0.6 秒一次）。
+- 手动跑 `/usr/sbin/BlueTool.real -R`：**不退出、也不打开我们的 kctl**（`SWEET BT: HCI: … connects` 计数一直停在 1，而那 1 次是我们自己的 `hcitest`）。它是常驻模式，卡在某处等响应。
+- 反过来验证：`echo help | /usr/sbin/BlueTool` 会打印 `Welcome to BlueTool... Rev 6.0` 后等 stdin —— 它是交互式 CLI，`-R` 是常驻子模式。
+
+**结论**：`bluetoothd` 的初始化链是 `bluetoothd → BlueTool -R（常驻） → 由它去建传输`。而 `BlueTool -R` 走的不是我们注册的 `com.apple.uart.bluetooth`（大概率是 Skywalk / mach service 那条），所以"kctl 明明能用、bluetoothd 就是不用"不是日志错觉，是路径不同。
+
+### 7.3 反面证据：我们自己扫到了真实 BLE 设备
+
+既然 `bluetoothd` 这条路卡着，就退一步验证"传输到底能不能跑真实业务"。自编 `btscan`（源码在 [`scripts/btscan.c`](../scripts/btscan.c)），走同一个 kctl：
+
+1. HCI Reset `0x0c03` → status 0
+2. LE Set Scan Parameters `0x200b`（active / 60 ms interval / 30 ms window / public addr / 不过滤）
+3. LE Set Scan Enable `0x200c` → status 0
+4. 读 12 秒 LE Meta 事件（`0x3e` / subevent `0x02`），解析地址、RSSI、AD 结构里的名字
+
+结果（原始输出见 [`logs/20261122-ble-scan.txt`](../logs/20261122-ble-scan.txt)）：
+
+```
+unique devices: 6      total reports: 203
+  10:39:17:37:0e:14  type0   -59 dBm  x86  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type1   -41 dBm  x41
+  05:ca:1f:a5:b6:23  type1   -41 dBm  x41
+  7b:6d:3f:75:33:c5  type1   -41 dBm  x31
+  e1:82:ab:fb:32:3c  type1   -42 dBm  x2
+  63:61:19:5f:da:9e  type1   -82 dBm  x2
+```
+
+- BLE 从"HCI 命令能过"升级成**真实射频收包**：广播里带完整的 AD 结构，能在 Scan Response 里读出设备名。
+- 踩到的坑：H4 事件布局是 `04 | evt | plen | payload`，subevent 在 `payload[0]`（`e[3]`）而不是 `e[2]`；一开始按 `e[2]` 解析，命令全 status 0 但打印 0 条，而内核侧 `SWEET BT: RX evt 0x3e` 早就在刷屏——说明**包到了、我们解析错了**。
+
+### 7.4 下一步（已收窄）
+
+1. `BlueTool -R` 到底在等谁：给 `bluetoothd`/`BlueTool` 加沙盒放行后看是否变化，或在 kctl `.sk.bluetooth` 的 open 路径打点，确认它有没有碰 Skywalk 那条；
+2. `kAKSLoadBag`（`sel 8`）仍 `0xe00002c7`，`bluetoothd` 侧未见调用，优先级降低；
+3. 若确认 `BlueTool -R` 只认 Skywalk：只有两条路 —— 把我们的 kctl 伪装成 Skywalk 的 mach service，或改 `bluetoothd` 的传输选择；两条都比现在的补丁重。
+
+

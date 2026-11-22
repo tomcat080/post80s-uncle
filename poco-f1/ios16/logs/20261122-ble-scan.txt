@@ -1,0 +1,211 @@
+Warning: Permanently added '192.168.7.2' (ED25519) to the list of known hosts.
+connected (ctl id 12), active scan
+cmd 0x0c03 -> status 0
+cmd 0x200b -> status 0
+cmd 0x200c -> status 0
+scanning 12 s ...
+  7b:6d:3f:75:33:c5  type 1  rssi -46 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -45 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -72 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -73 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -46 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -73 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -72 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -78 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -77 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -47 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -76 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -75 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -41 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -77 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -77 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -41 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -41 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -46 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -71 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -71 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  05:ca:1f:a5:b6:23  type 1  rssi -47 dBm  adv 18 B  evt 0
+  e1:82:ab:fb:32:3c  type 1  rssi -47 dBm  adv 8 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -80 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -80 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -70 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -71 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -71 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -43 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  05:ca:1f:a5:b6:23  type 1  rssi -48 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -48 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -70 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -70 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -89 dBm  adv 30 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -43 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -47 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -47 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -88 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -91 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -44 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -47 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -46 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -46 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -89 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -86 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -42 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -83 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -83 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -43 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -43 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -82 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -82 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -89 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -90 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -42 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -70 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  e1:82:ab:fb:32:3c  type 1  rssi -42 dBm  adv 8 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -69 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -86 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -86 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -46 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -42 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -44 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -73 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -72 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -45 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -45 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -45 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -45 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -63 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -77 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -78 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -64 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -64 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -49 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -50 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -61 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -61 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -72 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -72 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -50 dBm  adv 27 B  evt 0x3
+  05:ca:1f:a5:b6:23  type 1  rssi -50 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -50 dBm  adv 0 B  evt 0x4
+  63:61:19:5f:da:9e  type 1  rssi -82 dBm  adv 6 B  evt 0x3
+  63:61:19:5f:da:9e  type 1  rssi -84 dBm  adv 6 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -59 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -59 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -47 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -41 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -41 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -47 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -63 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -63 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -68 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -42 dBm  adv 27 B  evt 0x3
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 18 B  evt 0
+  6f:cb:48:4b:44:00  type 1  rssi -42 dBm  adv 0 B  evt 0x4
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -67 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  7b:6d:3f:75:33:c5  type 1  rssi -42 dBm  adv 27 B  evt 0x3
+  10:39:17:37:0e:14  type 0  rssi -76 dBm  adv 30 B  evt 0
+  10:39:17:37:0e:14  type 0  rssi -76 dBm  adv 20 B  evt 0x4  "Galaxy Fit2 (0E14)"
+  7b:6d:3f:75:33:c5  type 1  rssi -42 dBm  adv 27 B  evt 0x3
+  7b:6d:3f:75:33:c5  type 1  rssi -42 dBm  adv 27 B  evt 0x3
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -44 dBm  adv 0 B  evt 0x4
+  6f:cb:48:4b:44:00  type 1  rssi -47 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 18 B  evt 0
+  05:ca:1f:a5:b6:23  type 1  rssi -43 dBm  adv 0 B  evt 0x4
+cmd 0x200c -> status 0
+done: 203 adv reports

@@ -61,7 +61,7 @@ images/                     # 只放跨项目复用的素材
 | BQ Aquaris X3（工程机 tapion / SURO CARBON） | 身份鉴定 / BL 解锁 / root / EDL 全量备份 / Android 9 GSI | 已 root，6.8GB 备份完成；GSI 已点亮（中文+联网，相机黑屏真因已定位为物理开关） | [详情](tapion/README.md) |
 | iRiver D8 | 固件恢复 / NAND 重写 | 刷机包自制成功，启动链排查中 | [详情](iriver-d8/README.md) |
 | POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | [详情](poco-f1/linux/README.md) |
-| POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；蓝牙用户态推进中；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
+| POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；自编 `btscan` 已扫到 6 台 BLE 设备；蓝牙用户态（`bluetoothd`）仍在攻；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
 | DOOV MT6771 | 安卓老机改家庭 NAS | 已落地 | 整理中 |
