@@ -13,7 +13,7 @@
 - Bootloader 已解锁（orange），EDL 9008 可枚举、通用 SDM660 firehose 可读写；**已通过 Magisk 29.0 获取 root（双槽补丁镜像均已刷入）**。
 - 公开渠道**不存在** tapion 原厂固件 / boot.img / TWRP / Lineage 适配；网上固件站（gofirmware、firmwareoficial 等）均为 SEO 垃圾页，无真实该机包。
 - 基带 NV 已初始化但**未写号（IMEI 全 0）**；不具备正常通话条件，Wi-Fi / 蓝牙不受影响。
-- **2026-11-22 更新**：Android 9 同代 GSI（phh v123 vanilla）已在 **b 槽完整点亮**，中文 / ADB / Wi-Fi 可用，重启持久化；相机黑屏真因为**物理三档开关拨在摄像头关闭档**（非软件/GSI 问题），拨开即可（详见第十二节）。设备当前停在 b 槽 GSI。
+- **2026-11-22 更新**：Android 9 同代 GSI（phh v123 vanilla）已在 **b 槽完整点亮**，中文 / ADB / Wi-Fi / root 可用，重启持久化；相机黑屏真因为**左侧物理三档 Safety Switch 拨在了隐私档**（非软件/GSI 问题），拨到第 1 档 Normal 后**前后摄出图、拍照成功**（4032×3016 JPEG，详见第十二节）。设备当前停在 b 槽 GSI。
 
 ## 二、设备身份表
 
@@ -216,7 +216,7 @@ fastboot reboot
 |---|---|---|---|---|---|
 | 1 | 整机分区离线备份（system_a / vendor_a / modem_a / xbl / abl / dsp / bluetooth / vbmeta 等） | **已完成** | EDL `rl` 全分区导出至 `dumps/partitions/`，含 SHA256 清单；仅排除 userdata | 占用 Mac 磁盘；误写分区可变砖 | 已作为后续动系统 / 移植的兜底回滚点 |
 | 2 | 离线分析 secure fork 激活 / 远程锁逻辑 | 中 | root 后可读 `/system`、`/vendor`、init rc、`BqFirstBoot`、远程锁服务与 sepolicy | 误删系统组件可能导致无法启动；改动前先备份 | 解包 system/vendor，搜激活校验、远程鉴权、账号绑定相关包名与服务，判断是本地锁还是依赖已死后端 |
-| 3 | GSI 通用系统镜像试用（Android 9 同代） | **已实测：Android 9 GSI 点亮**；Android 14 跨代 bootloop | `ro.treble.enabled=true`；vendor 为 Android 9 blob，**必须选同代 GSI**。Android 9 / phh v123 vanilla 成功 | 相机 HAL 与 GSI 深层不兼容（见第十二节）；userdata 需格式化为明文 | 已刷 b 槽验证；退路是 `set_active a` + EDL 全备份 |
+| 3 | GSI 通用系统镜像试用（Android 9 同代） | **已实测：Android 9 GSI 点亮 + 相机可用**；Android 14 跨代 bootloop | `ro.treble.enabled=true`；vendor 为 Android 9 blob，**必须选同代 GSI**。Android 9 / phh v123 vanilla 成功 | 相机黑屏是左侧物理开关在隐私档（非 HAL 不兼容），拨第 1 档即解决；userdata 需格式化为明文（见第十二节） | 已刷 b 槽验证；退路是 `set_active a` + EDL 全备份 |
 | 4 | LineageOS 等第三方 ROM 移植 | 低 | 无 tapion 适配、无内核源码、社区基数为零；可参照 zangyapro（X2 Pro，同 SDM660），但设备树 / 分区布局 / 调制解调器差异大 | 工作量极大，变砖风险高 | 暂不投入；除非方向 1、2 产出可复用的分区与 blob 清单 |
 | 5 | TWRP / 自定义 recovery | 低 | A/B 设备且 ramdisk 位于 boot；无现成适配 | 同上 | 暂缓；若 GSI 方向走通再评估 |
 | 6 | 官方 OTA / 升级 Android 10+ | 死路 | OTA 后端域名出售下线，厂商破产，机型从未零售 | — | 不再追踪官方更新 |
@@ -295,7 +295,7 @@ fastboot reboot
 
 ## 十二、GSI 折腾记（2026-11-22）
 
-> 目标是验证"同代 GSI 能否点亮 + 中文 + 联网 + root"。结论：**Android 9 GSI 成功，相机是硬件级死结**。
+> 目标是验证"同代 GSI 能否点亮 + 中文 + 联网 + root + 相机"。结论：**Android 9 GSI 全部成功**，相机黑屏是物理开关档位问题（拨到第 1 档即出图），非 GSI 死结。
 
 > 这一方向的配套文件（开机动画、Open Camera、相机自启修复脚本）已归到 [gsi/](gsi/README.md)。
 
@@ -334,7 +334,7 @@ fastboot reboot
 | 中文 | ✅ | `persist.sys.locale=zh-CN` 重启后保持；锁屏"没有 SIM 卡/已充满电/12月11日周三"全简体中文 |
 | 联网 | ✅ | wlan0 `172.16.11.239/21`；Google generate_204 探测被墙会误报"无网络"，实际内网通 |
 | root | ✅ | boot 内 Magisk 29.0（29000），普通 shell `su -c id` → `uid=0(root) context=u:r:magisk:s0`。修复见下 |
-| 相机 | ⚠️ 待物理拨开关 | 真因是三档硬件开关在摄像头关闭档，拨开即可；非 GSI 缺陷。见 12.4 |
+| 相机 | ✅ 已修复并实测 | 物理三档 Safety Switch 拨到第 1 档 Normal 后，Open Camera 前后摄均出图，4032×3016 JPEG 拍摄成功；非 GSI 缺陷。见 12.4 |
 
 ### 12.3.1 root 修复（su 被拒的根因与三段修法）
 
@@ -352,7 +352,7 @@ adb shell 'mount -o ro,remount /'
 adb shell 'su -c id'   # uid=0(root) ... context=u:r:magisk:s0
 ```
 
-### 12.4 相机：修好服务自启，剩下 HAL 死结
+### 12.4 相机：修好服务自启 + 拨对物理开关，前后摄已出图
 
 **问题 1（已根治）：相机 provider 服务不启动。** vendor rc `/vendor/etc/init/android.hardware.camera.provider@2.4-service.rc` 里有 `disabled`，且只在 `on property:vold.decrypt=trigger_restart_framework` 时 start。data 改为明文后该属性永不触发 → 服务永不启动。修法：
 
@@ -380,16 +380,24 @@ msm_sensor_power_up : Camera slider disabled                 ← 摄像头硬件
 msm_sensor_match_id: imx486 / s5k4h7yx / s5k5e9yx: read id failed rc -22
 i2c-msm-v2: NACK: slave not responding, ensure its powered   ← sensor 没供电
 ```
-本机有**物理三档硬件开关**（可切断射频 / 摄像头 / 麦克风），当前拨在摄像头关闭档 → sensor 不供电 → I2C 全 NACK → streamon 失败 → 连锁报 ENOSYS -38。
-- **已排除**：① 强制 Camera1 API（底层仍走 Camera3 桥接）；② SELinux permissive（无 avc denied）；③ HAL ABI 不匹配（早期误判，dmesg 证明 HAL 正常，是 sensor 没电）。
-- **解法**：**物理拨动侧面开关到摄像头开启档**，然后重开相机即可。软件无法绕过（slider-switch 靠 GPIO input 事件上报，sysfs 无可写状态节点）。
+本机有**物理三档硬件开关**，BQ 官方用户手册（[FCC 文档](https://fccid.io/2AN87CARBON/User-Manual/User-manual-4663683.pdf)）明确定义，位于**机身左侧**（形态类似一加 1/2、iPhone 4/5 的静音拨键）：
+- **第 1 档 Normal**：全部功能开启（摄像头可用）✅
+- **第 2 档 Privacy**：禁用摄像头 + 麦克风
+- **第 3 档 Total privacy**：禁用摄像头 + 麦克风 + 数据
+
+之前拨在第 2/3 档 → sensor 不供电 → I2C 全 NACK → streamon 失败 → 连锁报 ENOSYS -38。
+- **已排除**：① 强制 Camera1 API（底层仍走 Camera3 桥接）；② SELinux permissive（无 avc denied）；③ HAL ABI 不匹配（早期误判，dmesg 证明 HAL 正常，是 sensor 没电）；④ sendevent 注入 slider input 按键（驱动读 GPIO 物理电平，注入无效）；⑤ GPIO 234/235 被驱动独占无法 export。
+- **解法（已实测有效）**：把左侧 Safety Switch 拨到**第 1 档 Normal**，无需重启，重开 Open Camera 即出图。软件无法绕过。
+- **验收结果（2026-11-22）**：拨到第 1 档后 `slider_int0_state=1`、`slider state=1`；Open Camera 后摄取景器实时出图、前摄（ID:2）也出图；点击快门成功保存 `/sdcard/DCIM/OpenCamera/IMG_20191211_004532.jpg`，**4032×3016 全分辨率 JPEG（2.4MB）**，Exif 机型 `Phh-Treble vanilla` / `treble_arm64_bvN`，logcat 有 `jpeg_hw w 4032 h 3016` + `QCamera JPEG callback status=0`。成像正常无黑屏/花屏/绿屏。
 - 4 个 sensor：imx486（主）/ s5k4h7yx / s5k5e9yx 等。原厂 BqCamera app 不在 vanilla GSI 中（vendor 配置的 `com.bq.camerabq`）。
+
+> ⚠️ **折腾禁区**：这台机器读 `/sys/kernel/debug/gpio` 会触发内核 panic，掉进高通 ramdump 模式（USB PID 0x900e）。救援方法：底层发 SAHARA_RESET_STATE_MACHINE_ID(0x13) 复位协议状态机 + 带 sdm636 firehose loader 走 `sahara.cmd_reset()`，通常 1-2 轮即可拉回正常 adb（0x4ee7）。**永远不要读这个 debugfs 文件。**
 
 **附带踩坑**：用 `sed -i 's/.../...\n.../'` 改 Open Camera 的 shared_prefs 时，本机 sed 不认 `\n`，会把 XML 写成一行损坏文件，app 启动后重建配置、注入的值丢失。改用本地生成完整 XML 再 `adb push` + `chown 10075:10075` + `chmod 660`。
 
 ### 12.5 当前状态与退路
 
-- 设备停在 **b 槽 GSI 桌面**，SELinux enforcing，相机服务自启修复保留，Open Camera 已装（取景器黑屏）。
+- 设备停在 **b 槽 GSI 桌面**，SELinux enforcing，相机服务自启修复保留，Open Camera 已装且**前后摄均出图、拍照成功**（左侧 Safety Switch 已在第 1 档 Normal）。
 - **退路完好**：EDL 64 分区全备份（see 第四节）+ a 槽原厂 system/boot 完好；`fastboot set_active a` 可随时切回。
 - **配套镜像已上传仓库 Release**：[tapion-gsi-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-gsi-v1)（`phh-v123-arm64-ab-vanilla-nosu.img.xz` 451MB + `magisk_patched_boot-29.0.img` 67MB + `SHA256.txt`）；EDL 全分区 6.8GB 备份见 [tapion-edl-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-edl-v1)。
 
@@ -398,7 +406,7 @@ i2c-msm-v2: NACK: slave not responding, ensure its powered   ← sensor 没供�
 - [x] K2P Wi-Fi：已连接。SSID `K2P`，BSSID `82:8f:d4:79:c2:69`，5GHz（5220MHz），IP `172.16.11.36/21`，网关 `172.16.10.1`，DNS `114.114.114.114`，外网 ping 0% 丢包；网络代理 `172.16.14.227:12334`。
 - [x] 整机分区离线备份（方向 1）：`dumps/partitions/`，64 分区 + 双 GPT，清单 `MANIFEST.sha256.txt`；仅排除 userdata。
 - [x] GSI 实测（方向 3）：Android 9 / phh v123 vanilla 点亮，中文 / ADB / Wi-Fi 持久化；Android 14 跨代 bootloop。详见第十二节。
-- [ ] 相机：物理拨动侧面三档开关到摄像头开启档，重开 Open Camera 验证出图（真因已定位，见 12.4）。
+- [x] 相机：左侧 Safety Switch 拨到第 1 档 Normal → Open Camera 前后摄出图 + 4032×3016 JPEG 拍照成功（见 12.4）。
 - [x] Magisk 普通 shell root 修复：GSI 预置老 `/system/xbin/su` 触发 Magisk"异常状态"→ 拒绝所有 su。三步修复：① `magisk --unlock-blocks` + `mount -o rw,remount /`（本机 / 即 system），备份后 `rm /system/xbin/su`；② Magisk app 弹"修复运行环境"点确定（重装+重启）；③ 超级用户标签把 `[SharedUID] Shell` 开关打开。最终 `su -c id` → `uid=0(root) context=u:r:magisk:s0`。
 - [ ] secure fork 锁机逻辑离线分析（方向 2）。
 - [ ] Magisk App 提示可升 30.6：建议保持 29.0；若升级需重新走"修补文件"流程并备份当前镜像。
