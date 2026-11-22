@@ -1,0 +1,110 @@
+--- a/iokit/Kernel/arm/SweetKeyStore.cpp	2026-11-22 09:52:58
++++ b/iokit/Kernel/arm/SweetKeyStore.cpp	2026-11-22 09:53:23
+@@ -158,8 +158,94 @@
+ 	buf[0] = 0x31;
+ 	buf[1] = (uint8_t)(n - 2);
+ 	return sweet_aks_struct_out(args, buf, n);
++}
++
++static IOReturn
++sweet_aks_struct_in(IOExternalMethodArguments *args, void *buf, uint32_t len)
++{
++	if (args->structureInputDescriptor != NULL) {
++		if (len > args->structureInputDescriptor->getLength()) {
++			return kIOReturnBadArgument;
++		}
++		args->structureInputDescriptor->readBytes(0, buf, len);
++		return kIOReturnSuccess;
++	}
++	if (args->structureInput == NULL || len > args->structureInputSize) {
++		return kIOReturnBadArgument;
++	}
++	memcpy(buf, args->structureInput, len);
++	return kIOReturnSuccess;
++}
++
++/*
++ * Key wrapping (selector 10) and unwrapping (selector 11). There is no keybag
++ * here: the wrapped form is the key bytes behind an 8-byte self-describing
++ * header, so it round-trips exactly. securityd stows what it wrapped and
++ * unwraps it later; nothing is weakened, because a machine that boots unlocked
++ * has no secret for the wrap to protect.
++ */
++#define SWEET_AKS_WRAP_HDR 8
++#define SWEET_AKS_KEY_MAX  64
++
++static IOReturn
++sweet_aks_wrap_key(IOExternalMethodArguments *args)
++{
++	uint32_t klen = args->structureInputDescriptor != NULL ?
++	    (uint32_t)args->structureInputDescriptor->getLength() : args->structureInputSize;
++	uint8_t in[SWEET_AKS_KEY_MAX];
++	uint8_t out[SWEET_AKS_KEY_MAX + SWEET_AKS_WRAP_HDR];
++	if (klen == 0 || klen > SWEET_AKS_KEY_MAX) {
++		return kIOReturnBadArgument;
++	}
++	IOReturn ret = sweet_aks_struct_in(args, in, klen);
++	if (ret != kIOReturnSuccess) {
++		return ret;
++	}
++	out[0] = 'S';
++	out[1] = 'W';
++	out[2] = 'K';
++	out[3] = '1';
++	out[4] = (uint8_t)klen;
++	out[5] = 0;
++	out[6] = 0;
++	out[7] = 0;
++	memcpy(out + SWEET_AKS_WRAP_HDR, in, klen);
++	ret = sweet_aks_struct_out(args, out, klen + SWEET_AKS_WRAP_HDR);
++	if (ret == kIOReturnSuccess && args->scalarOutputCount >= 1) {
++		args->scalarOutput[0] = klen + SWEET_AKS_WRAP_HDR;
++		args->scalarOutputCount = 1;
++	}
++	return ret;
+ }
+ 
++static IOReturn
++sweet_aks_unwrap_key(IOExternalMethodArguments *args)
++{
++	uint32_t len = args->structureInputDescriptor != NULL ?
++	    (uint32_t)args->structureInputDescriptor->getLength() : args->structureInputSize;
++	uint8_t in[SWEET_AKS_KEY_MAX + SWEET_AKS_WRAP_HDR];
++	if (len <= SWEET_AKS_WRAP_HDR || len > sizeof(in)) {
++		return kIOReturnBadArgument;
++	}
++	IOReturn ret = sweet_aks_struct_in(args, in, len);
++	if (ret != kIOReturnSuccess) {
++		return ret;
++	}
++	if (in[0] != 'S' || in[1] != 'W' || in[2] != 'K' || in[3] != '1') {
++		return kIOReturnBadArgument;
++	}
++	uint32_t klen = in[4];
++	if (klen == 0 || klen + SWEET_AKS_WRAP_HDR != len) {
++		return kIOReturnBadArgument;
++	}
++	ret = sweet_aks_struct_out(args, in + SWEET_AKS_WRAP_HDR, klen);
++	if (ret == kIOReturnSuccess && args->scalarOutputCount >= 1) {
++		args->scalarOutput[0] = klen;
++		args->scalarOutputCount = 1;
++	}
++	return ret;
++}
++
+ static uint32_t
+ sweet_aks_struct_out_size(IOExternalMethodArguments *args)
+ {
+@@ -213,6 +299,12 @@
+ 		args->scalarOutputCount = 0;
+ 		ret = sweet_aks_device_state(args);
+ 		break;
++	case kAKSWrapKey:
++		ret = sweet_aks_wrap_key(args);
++		break;
++	case kAKSUnwrapKey:
++		ret = sweet_aks_unwrap_key(args);
++		break;
+ 	default:
+ 		ret = kIOReturnUnsupported;
+ 		break;

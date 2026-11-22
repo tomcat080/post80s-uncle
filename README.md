@@ -16,7 +16,8 @@
 ├── tapion/         # BQ SURO CARBON 工程机（tapion / Aquaris X3）
 │   └── README.md   # 身份鉴定 + BL 解锁 + root + EDL 全量备份记录
 ├── firmware/       # 自制刷机包、镜像（大文件走 Releases）
-├── poco-f1/        # POCO F1 刷 Kupfer Linux
+├── poco-f1/        # POCO F1：Kupfer Linux + iOS 16.7.16 移植
+│   └── ios16/      # iOS 16 档案：docs / patches / workflows / scripts / logs
 ├── xiaomi-4c/      # 小米路由 4C 刷 OpenWrt
 └── images/         # 通用图片素材
 ```
@@ -28,6 +29,7 @@
 | BQ SURO CARBON (tapion) | 身份鉴定 / BL 解锁 / root / EDL 全量备份 / Android 9 GSI | 已 root，6.8GB 备份完成；GSI 已点亮（中文+联网，相机 HAL 死结） | [详情](tapion/README.md) |
 | iRiver D8 | 固件恢复 / NAND 重写 | 刷机包自制成功，启动链排查中 | [详情](iriver-d8/README.md) |
 | POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | 整理中 |
+| POCO F1 | **刷 iOS 16.7.16（xnu-8796，纯 CPU）** | 真机进桌面 + SSH 可操作；蓝牙用户态推进中；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
 | DOOV MT6771 | 安卓老机改家庭 NAS | 已落地 | 整理中 |
@@ -42,6 +44,8 @@
   - 原厂 boot 在 `edl-tool/dumps/boot_a.img`（SHA256 `db359a0b…3f57f`），当前 Magisk 补丁 boot 为 `partitions/boot_a.bin`（SHA256 `869b266b…3720`），双通道都在。
   - 本机 Mac 工作区 `Doubao/chats/2026-11-17/new-chat-1/` 也留有一份（同源）。
 - **iRiver D8**：成品恢复包 + 整片 NAND dump 分卷走 [GitHub Releases](https://github.com/tomcat080/post80s-uncle/releases/tag/d8-restore-v1)。
+- **POCO F1 / iOS 16**：启动镜像（shim boot.img ×4）+ AKS 内核走 [Release poco-f1-ios16-boot-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-boot-v1)。
+  - 12.1GB 根文件系统与 21.4GB raw 镜像**不进 GitHub**（单文件上限 2GB，且体积/带宽不划算），冷备在 `rock-tom@172.16.14.177:~/backups/beryllium-poco-f1-ios16-20261119/`（67GiB / 165 文件，SHA 逐件核对通过）；重建方法见 [ios16/docs/04](poco-f1/ios16/docs/04-内核重建通道.md)。
 
 ## 关于这些记录
 

@@ -1,0 +1,50 @@
+# 2026-11-22 内核 console 节选（UDP 192.168.7.1:5140 抓取）
+# 内核：xnu-8796.141.3，含 0142-sweet-aks-wrapkey.patch
+# boot.img：shim-boot-aks2.img  sha256 fa6996f76611ba22a3aad3463dbe10410f2fb99b0e151ce904425ab35c366052
+
+## 1. 修复前（对照，旧内核）
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+（同一启动周期内出现 132 次，chronod / CloudKeychainProxy / syncdefaultsd / adprivacyd 等）
+
+## 2. 修复后（本次启动）
+SWEET AKS: bluetoothd sel 0 arg0 0 in 0/0 out 0/0 -> 0x0
+SWEET AKS: bluetoothd sel 7 arg0 0 in 1/0 out 1/0 -> 0x0
+SWEET AKS: bluetoothd sel 17 arg0 0 in 1/0 out 0/4096 -> 0x0
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0x0
+SWEET AKS: vmd sel 0 arg0 0 in 0/0 out 0/0 -> 0x0
+SWEET AKS: vmd sel 7 arg0 0 in 1/0 out 1/0 -> 0x0
+
+## 3. 本次启动 AKS 选择子统计（sel / 次数 / 返回）
+0    Open            11   0x0
+7    GetLockState     8   0x0
+8    LoadBag          3   0xe00002c7   <-- 仍缺
+10   WrapKey         21   0x0          <-- 本次修复
+17   GetDeviceState  345   0x0
+26   AssertHold        2   0x0
+27   AssertDrop        3   0x0
+35   (未知)           46   0x0
+
+## 4. bluetoothd 行为变化
+exec xpcproxy
+exec BlueTool
+exec BlueTool
+exec BlueTool
+exec BlueTool
+exec BlueTool
+SWEET Sandbox: bluetoothd privilege 12000 denied
+SWEET Sandbox: bluetoothd privilege 1002 denied
+process vmd[229] thread 2154 caught burning CPU! It used more than 50% CPU over 180 seconds
+  (actual recent usage: 65% over ~137 seconds)
+
+## 5. 传输占用探针（bluetoothd 运行期间执行 hcitest）
+connected to com.apple.uart.bluetooth (ctl id 12)
+TIOCSETA 3000000 baud ok
+TX cmd 0x0c03: 01 03 0c 00
+RX evt: 04 0e 04 01 03 0c 00
+  Command Complete for 0x0c03, status 0, 3.7 ms
+TX cmd 0x1001: 01 01 10 00
+--> 结论：bluetoothd 未占用传输，仍停在 open 之前的某个等待点
+
+## 6. 内核 kctl 客户端统计（每次 open+close 打一行）
+SWEET BT: HCI: rx 3 pkts / 35 B (ring peak 15 of 65536 B, dropped 0 pkts full + 0 not connected,
+  socket full 0 of 3 enqueues), tx 3 pkts / 12 B (0 failed, 0 garbage), connects 1
