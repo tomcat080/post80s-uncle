@@ -202,3 +202,56 @@ unique devices: 6      total reports: 203
 3. 若确认 `BlueTool -R` 只认 Skywalk：只有两条路 —— 把我们的 kctl 伪装成 Skywalk 的 mach service，或改 `bluetoothd` 的传输选择；两条都比现在的补丁重。
 
 
+## 八、2026-11-22 下午：`BlueTool -R` 等的是 `AppleConvergedIPCInterface`
+
+### 8.1 先钉死两条 kctl 都是真的
+
+`hcitest -n com.apple.uart.sk.bluetooth`（ctl id **13**）同样走完三条命令：
+
+```
+connected to com.apple.uart.sk.bluetooth (ctl id 13)
+TIOCGETA: 72 bytes, cflag 0x38b00, speed 3000000/3000000
+TX cmd 0x0c03 -> Command Complete status 0, 3.9 ms
+TX cmd 0x1001 -> status 0, manufacturer 0x001d, LMP version 9, subversion 0x02be
+TX cmd 0x1009 -> status 0, BD_ADDR 01 b0 77 5e 00 02
+```
+
+内核对 ctl 12 和 13 **都**打 `client connected (ctl id N unit 1)` / `client disconnected (unit 1)`（本机 console 第 28222–28505 行可见 12 与 13 交替出现）。因此"`bluetoothd` 存活期间一条 client 记录都没有"这条判据是站得住的：它两条 kctl 都没开过。
+
+### 8.2 `BlueTool -R` 的阻塞点
+
+`strings` 拉回本地后按上下文排序，它等的东西写得很清楚：
+
+```
+AppleConvergedIPCInterface
+ACIPCInterfaceProtocol
+ACIPCInterfaceTransport
+IOSkywalkNexusUUID
+ACIPCInterface not found, waiting for it to appear
+ACIPCInterfaceTransport "%s"
+ACIPCInterfaceTransport + IOSkywalkNexusUUID found
+Retry: %d - trying to find ACIPCInterfaceTransport + IOSkywalkNexusUUID
+ACIPCInterfaceTransport is not skywalk
+ACIPCInterface found, ACIPCInterfaceTransport property not found
+ACIPCInterface not found after 5 second -- runLoopResult = 0x%02x
+no IOSkywalkNexusUUID property
+```
+
+即：它在 IOKit 里找类名 `AppleConvergedIPCInterface` 的服务，再读该节点的 `ACIPCInterfaceTransport` 属性；属性值命中 `skywalk` 才走 Skywalk 通道，否则走另一条（非 skywalk）路径。我们的内核只暴露 uart kctl，没有这个节点，于是它留在"waiting for it to appear"里。
+
+`timeout 10 /usr/sbin/BlueTool -R >/tmp/blue2.out 2>&1 </dev/null` 实测 `rc=124`、输出 0 字节 —— 十秒内一个字都不打，是真的卡在 runloop 等待，不是慢。
+
+（顺带补充：`toybox` 里**有** `timeout`、`nohup`、`setsid`、`killall5`，之前"设备没有 timeout"的记录不准确。）
+
+### 8.3 把 `BlueTool` 换成"立即 exit 0"的桩：无效
+
+- 原件备份 `/usr/local/bin/BlueTool.orig-20261122`（9,760,944 B），`/usr/sbin/BlueTool` 换成 68,256 B 的桩，`argv` 写 `/tmp/btstub.log`。
+- 冷启动后：BT 固件 729 段下载完成、`SWEET BT: transport up` 打印（console 第 31546 行），`exec BlueTool` 仍被反复调用（transport up 之后 40+ 次），但 **ctl 12/13 依然一条 client 记录都没有**，`sweetps` 里也看不到 `bluetoothd`。
+- 桩本身没有造成调用风暴：单次开机 `/tmp/btstub.log` 只有 9–79 行，`ppid 1`（launchd 直接派生），不是每秒上千次。
+- 结论：`BlueTool` 卡住只是**表征**，`bluetoothd` 的死亡与它无关；换掉 `BlueTool` 不会让 `bluetoothd` 去开 kctl。原件已还原。
+
+### 8.4 现在还剩的三条路
+
+1. **内核侧伪造 `AppleConvergedIPCInterface`**：注册一个该名字的 IOService，挂 `ACIPCInterfaceTransport` 属性（非 `skywalk` 值），把 `BlueTool -R` 从等待里放出来。代价是得动内核、重编、刷 boot（每次都要人工进 fastboot）。
+2. **改 `bluetoothd` 的传输选择**：它崩在 dyld private memory+8（`EXC_BAD_ACCESS`/`SIGBUS`），先要拿到"崩之前它想干什么"。可加 kctl `open` 路径的进程名日志，或在 `bluetoothd` 里塞一个 `exec` 计数器确认它是死在拉起传输**之前**。
+3. **承认用户态这条线收益太低**：HCI 层面（Reset / Read Local Version / BD_ADDR / LE 扫描收广播）已经端到端可用，用户态栈的阻塞点不在我们的 kctl 上，转 Wi-Fi/音频更划算。
