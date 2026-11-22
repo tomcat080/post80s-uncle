@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>POCO F1 刷 iOS 16.7.16 · 刷机教程</title>
+<meta name="description" content="在小米 POCO F1（beryllium / SDM845）上跑 iOS 16.7.16 用户空间：完整步骤、踩坑与回滚。" />
+<meta name="color-scheme" content="light" />
+<style>
+:root{--bg:#fbfbf9;--fg:#16181c;--muted:#5f6673;--line:#e4e4df;--card:#fff;--accent:#0a7cff;--warn:#b4530a;--ok:#0a7c3a;--code:#f4f4f1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px}
+header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:9}
+header .inner{max-width:860px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+a.brand{text-decoration:none;color:var(--fg);font-weight:700;letter-spacing:.02em}
+header nav a{margin-left:16px;color:var(--muted);text-decoration:none;font-size:14px}
+header nav a:hover{color:var(--accent)}
+.hero{padding:44px 0 8px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:30px;line-height:1.3;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 18px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.tags span{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:#fff}
+.alert{border:1px solid var(--line);border-left:3px solid var(--warn);background:#fffaf3;padding:12px 16px;border-radius:8px;margin:18px 0;font-size:14.5px}
+.alert.ok{border-left-color:var(--ok);background:#f4fbf6}
+h2{font-size:20px;margin:40px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px;color:#22262c}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:6px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px}
+pre{background:#1c1f24;color:#e8e8e4;padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.6}
+pre .c{color:#8b98a8}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f7f7f4;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+.step{margin:26px 0;padding:18px 20px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.step h3{margin-top:0;display:flex;gap:10px;align-items:center}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;align-items:center;justify-content:center;font-weight:600}
+.dl{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.dl a{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--fg);text-decoration:none;padding:8px 14px;border-radius:8px;font-size:14px}
+.dl a:hover{border-color:var(--accent);color:var(--accent)}
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.mono{font-size:13px;color:var(--muted)}
+@media(max-width:560px){h1{font-size:24px}header nav{display:none}pre{font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="inner">
+  <a class="brand" href="https://zhengba-lab.pages.dev">⚡ 80后大叔</a>
+  <nav><a href="#pre">前置</a><a href="#steps">步骤</a><a href="#trouble">排障</a><a href="#rollback">回滚</a></nav>
+</div></header>
+
+<div class="wrap">
+<section class="hero">
+  <p class="kicker">POCO F1 · beryllium · SDM845</p>
+  <h1>把 iOS 16.7.16 跑到小米 POCO F1 上</h1>
+  <p class="sub">xnu-8796 开发内核 + iOS 16.7.16 用户空间（iPhone X d22ap，未改动），纯 CPU 渲染，无 GPU 驱动。真机已进过锁屏与桌面，USB 网络与 SSH 可完全操作。</p>
+  <div class="tags"><span>SDM845</span><span>xnu-8796</span><span>shim boot</span><span>UDP console</span><span>纯 CPU</span></div>
+  <div class="alert"><b>先读这句：</b>这是我在自己机器上的第一手记录，不是通用教程。刷机有风险，变砖自负；每一步都请先做备份。</div>
+</section>
+
+<h2 id="pre">一、准备</h2>
+<table>
+<tr><th>需要</th><th>说明</th></tr>
+<tr><td><code>fastboot</code> / <code>adb</code></td><td>能用 <code>-s &lt;serial&gt;</code> 锁定目标机，避免刷错设备</td></tr>
+<tr><td>iOS16 根文件系统</td><td>sparse HFS+，约 12.1 GB，刷进 <code>userdata</code></td></tr>
+<tr><td>shim 启动镜像</td><td>本页下方有下载；它不是原生 Android 内核，而是能把 xnu 拉起来的 loader</td></tr>
+<tr><td>Mac 侧网络方案</td><td>设备起来后会做 USB ECM 网卡，Mac 端配 <code>192.168.7.1/24</code>，设备是 <code>192.168.7.2</code></td></tr>
+<tr><td>外置硬盘</td><td>根镜像 12–21 GB，别塞系统盘（我的 Mac 只剩 10 GB 可用）</td></tr>
+</table>
+<div class="alert ok"><b>三个必须记住的点：</b>
+<ul>
+<li><b>UI 只认真机屏幕。</b>QEMU、截图、别人的机器表现如何都不作数。</li>
+<li><b>不要设 <code>BT_DEVICE_ADDRESS</code>。</b>iOS 16.7 的 bluetoothd 会把它 sscanf 后清零，直接判定“本机没有蓝牙”。</li>
+<li><b>刷机前先 dump 分区。</b><code>persist</code>、<code>modemst1/2</code>、双 GPT 丢了，就再也回不到能打电话的 Android。</li>
+</ul></div>
+
+<h2 id="steps">二、步骤</h2>
+
+<div class="step"><h3><span class="num">1</span>解锁 BL、进 TWRP</h3>
+<pre>fastboot -s 2b8c9438 flashing unlock
+fastboot -s 2b8c9438 boot twrp-3.7.0_9-0-beryllium.img
+<span class="c"># TWRP 里 adb devices 应出现 recovery</span></pre>
+<p>注意：iOS 镜像一旦跑起来，USB 描述符就不是 fastboot/adb 了，必须冷启动或重新 <code>fastboot boot</code>。</p>
+</div>
+
+<div class="step"><h3><span class="num">2</span>全量备份（不可跳过）</h3>
+<p>TWRP 下导出所有分区与 GPT，冷备到服务器，并逐件 <code>sha256sum -c</code> 核对。至少覆盖 <code>modem / modemst1 / modemst2 / persist / persistbak / fsg / fsc / bluetooth / dsp / misc / frp / limits</code> 与两套 GPT。</p>
+</div>
+
+<div class="step"><h3><span class="num">3</span>写入 iOS 根文件系统</h3>
+<pre>fastboot -s 2b8c9438 flash userdata ios16-root.simg</pre>
+<p>刷完<b>不要</b>再格式化 userdata。</p>
+</div>
+
+<div class="step"><h3><span class="num">4</span>用 shim 启动，而不是原生 boot</h3>
+<p>POCO F1 的 ABL 只认 Android 内核格式，所以要先让 shim 上电（USB3 prim GDSC + 时钟主控）、按 <code>SWEETXNU</code> payload 平铺 xnu 段，再跳 <code>entry_va</code>。</p>
+<pre>fastboot -s 2b8c9438 boot shim-boot-aks2.img
+<span class="c"># 0.5 秒回 OKAY；约 15 秒出 USB 网卡；70–90 秒 SSH 可用</span></pre>
+<div class="dl">
+  <a href="https://github.com/tomcat080/post80s-uncle/releases/download/poco-f1-ios16-boot-v1/shim-boot-aks2.img">↓ 当前验证版（含 AKS 修复）</a>
+  <a href="https://github.com/tomcat080/post80s-uncle/releases/download/poco-f1-ios16-boot-v1/shim-boot-bt2.img">↓ 回滚首选</a>
+  <a href="https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-boot-v1">全部资产 / 校验和 ↗</a>
+</div>
+</div>
+
+<div class="step"><h3><span class="num">5</span>Mac 侧配网</h3>
+<pre><span class="c"># en13 每次重启都会丢 IP</span>
+osascript -e 'do shell script "ifconfig en13 inet 192.168.7.1 netmask 255.255.255.0 up" with administrator privileges'
+ping -c1 192.168.7.2
+nc -z 192.168.7.2 22</pre>
+</div>
+
+<div class="step"><h3><span class="num">6</span>SSH 与传文件</h3>
+<pre>SSHOPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  -o ConnectTimeout=10 -i $HOME/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+ssh $SSHOPTS root@192.168.7.2 'uname -a'
+
+<span class="c"># 设备没有 scp 子系统，只能这样传</span>
+ssh $SSHOPTS root@192.168.7.2 'toybox cat > /usr/local/bin/foo' &lt; ./foo
+ssh $SSHOPTS root@192.168.7.2 'toybox chmod 755 /usr/local/bin/foo'</pre>
+<p>设备 toybox 没有 <code>sh</code> applet，<code>/bin/sh</code> 需要换成自编的 <code>minish</code>，否则大量脚本与 <code>popen</code> 会失败。</p>
+</div>
+
+<div class="step"><h3><span class="num">7</span>抓内核日志（UDP console）</h3>
+<pre>python3 - &lt;&lt;'EOF'
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.bind(('0.0.0.0', 5140))
+with open('/tmp/console.log', 'ab', buffering=0) as f:
+    while True:
+        d, _ = s.recvfrom(65535)
+        f.write(d)
+EOF</pre>
+<p>一个端口只能一个进程占用，旧抓包进程没杀会报 <code>Address already in use</code>。没有 live 抓包时，可读 userdata 末尾 4 MiB 持久日志区，再用 <code>tools/sweet-log.py</code> 解码。</p>
+</div>
+
+<h2 id="trouble">三、排障</h2>
+<table>
+<tr><th>现象</th><th>原因</th><th>处理</th></tr>
+<tr><td><code>fastboot reboot normal</code> 报 unknown</td><td>ABL 不支持</td><td>用 <code>fastboot boot</code> 或手动按键</td></tr>
+<tr><td>USB PID 变 <code>0xd00d</code></td><td><code>fastboot reboot</code> 回落 fastboot</td><td>冷启动</td></tr>
+<tr><td>进系统但没网、SSH 拒连</td><td>USB3 prim GDSC / 时钟主控未上电</td><td>必须用带 shim 上电修复的镜像</td></tr>
+<tr><td>黑屏，每帧 <code>kIOReturnBadArgument</code></td><td>IOMFB 结构错配（0x514 vs 0x46c）</td><td>换正确谱系内核，别硬修补丁</td></tr>
+<tr><td><code>No bluetooth on this device</code></td><td>设了 <code>BT_DEVICE_ADDRESS</code></td><td>删掉该变量，改用 <code>BT_HCI_TRANSPORT</code></td></tr>
+<tr><td>内核“编译成功”但 BT/显示全无</td><td>补丁集不是 beryllium 谱系</td><td>比对 <code>sweetbt</code>/<code>sweetwlan</code> 字符串条数（应为 21 / 6）</td></tr>
+<tr><td><code>scp</code> 报 subsystem 失败</td><td>设备无 scp 子系统</td><td>用 <code>ssh 'toybox cat &gt; …'</code></td></tr>
+</table>
+
+<h2 id="rollback">四、回滚</h2>
+<pre><span class="c"># 回到 Android</span>
+fastboot -s 2b8c9438 flash boot boot-stock-V12.0.3.0.QEJMXIM.img
+fastboot -s 2b8c9438 flash userdata &lt;之前 dump 的 userdata&gt;</pre>
+<p>日常调试建议只 <code>fastboot boot</code>，不改分区；确认稳定再考虑 <code>flash boot</code> 固化。</p>
+
+<div class="card">
+<h3>现在的进度（2026-11-22）</h3>
+<ul>
+<li>✅ 真机进锁屏 / 桌面、SSH 可操作、ECM 网络、内核日志</li>
+<li>✅ 蓝牙硬件链：WCN3990 上电 + 固件 + 3 Mbaud + BD_ADDR，HCI 三条命令全 status 0</li>
+<li>✅ 内核重建通道：GitHub Actions 约 10 分钟出一个内核，补丁集与在跑内核同源</li>
+<li>⚠️ 蓝牙用户态：<code>bluetoothd</code> 已不再秒退、会拉起 <code>BlueTool</code>，但仍未接管 HCI 传输</li>
+<li>❌ Wi-Fi 联网、音频输出尚未开始</li>
+</ul>
+</div>
+
+<footer>
+  <p>原始记录与补丁：<a href="https://github.com/tomcat080/post80s-uncle/tree/main/poco-f1/ios16">github.com/tomcat080/post80s-uncle · poco-f1/ios16</a></p>
+  <p class="mono">仅记录，不保证通用。设备不同请自行判断。</p>
+</footer>
+</div>
+</body>
+</html>

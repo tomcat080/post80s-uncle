@@ -19,6 +19,7 @@ poco-f1/ios16/
 │   ├── 03-蓝牙与AKS.md              ← WCN3990 硬件链、bluetoothd 死亡链、AKS 修复
 │   ├── 04-内核重建通道.md            ← GitHub Actions 编 xnu、产物下载、重打 boot.img
 │   └── 05-复现步骤.md               ← 从零到进桌面 + 抓日志的完整操作序列
+├── tutorial.html                    ← 自成一体的一页教程（可内联进站点）
 ├── patches/0142-sweet-aks-wrapkey.patch   ← 本轮新写的 AKS WrapKey/UnwrapKey 补丁
 ├── workflows/xnu-macos15.yml        ← 能用的 CI 工作流（macos-15）
 ├── scripts/mk_logo_apple.py         ← 开机 logo 生成脚本
