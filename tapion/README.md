@@ -386,7 +386,7 @@ i2c-msm-v2: NACK: slave not responding, ensure its powered   ← sensor 没供�
 
 - 设备停在 **b 槽 GSI 桌面**，SELinux enforcing，相机服务自启修复保留，Open Camera 已装（取景器黑屏）。
 - **退路完好**：EDL 64 分区全备份（see 第四节）+ a 槽原厂 system/boot 完好；`fastboot set_active a` 可随时切回。
-- 大文件与镜像存放见仓库 Releases（`tapion-edl-v1`）；本轮 GSI 镜像 / boot dump 可视需要补充上传。
+- **配套镜像已上传仓库 Release**：[tapion-gsi-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-gsi-v1)（`phh-v123-arm64-ab-vanilla-nosu.img.xz` 451MB + `magisk_patched_boot-29.0.img` 67MB + `SHA256.txt`）；EDL 全分区 6.8GB 备份见 [tapion-edl-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-edl-v1)。
 
 ## 十三、待办与遗留
 
