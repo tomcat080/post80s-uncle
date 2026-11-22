@@ -40,7 +40,7 @@ poco-f1/ios16/
 | Shell 可用性 | ✅ | toybox 无 `sh` applet，已用自编 `minish` V3 覆盖 `/usr/local/bin/sh`（支持 `$(...)`、glob、fd 重定向、16KiB 行缓冲） |
 | 内核日志 | ✅ | 内核把 console 以 UDP 发到 `192.168.7.1:5140`，Mac 侧 python 收包即可 |
 | 蓝牙硬件链 | ✅ | WCN3990 上电、`crbtfw21.tlv`/`crnv21.bin` 下载、3 Mbaud、BD_ADDR 改写全部成功；`hcitest` 实测 HCI Reset/Read Local Version/Read BD_ADDR 全 `status 0` |
-| 蓝牙用户态 | ⚠️ | `bluetoothd` 已不再秒退、会拉起 `BlueTool`，但自己约 53 秒一次 SIGBUS（`EXC_BAD_ACCESS` @ dyld private memory+8）；它派生的 `BlueTool -R` 常驻却从不打开 kctl —— 它的传输不是我们这条通道 |
+| 蓝牙用户态 | ⏸ 已停 | 2026-11-22 决定收手。已定位：`BlueTool -R` 等 IOKit 节点 `AppleConvergedIPCInterface`（读 `ACIPCInterfaceTransport`，非 `skywalk` 值才走备选路径）；内核对 ctl 12/13 都可用（`hcitest -n` 两条全 `status 0`）；`bluetoothd` 约 53 秒一次 SIGBUS @ dyld private memory+8；换成 `exit 0` 桩后它仍未开任何 kctl —— 卡点不在我们的通道 |
 | BLE 扫描（自编 `btscan`） | ✅ | LE Set Scan Params / Enable 全 `status 0`；12 秒收到 **203 条广播 / 6 台设备**，含设备名 `Galaxy Fit2 (0E14)`，RSSI −41…−82 dBm |
 | Wi-Fi | ⏸ | `sweetwlan=1` 探针跑过；P3（MSS 内存池 + hyp-assign + MBA）未开工，风险 high |
 | 音频 | ❌ | 无驱动；`VirtualAudio` 已移入 `HAL.disabled` 绕过崩溃 |
