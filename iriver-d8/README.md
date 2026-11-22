@@ -3,7 +3,7 @@
 > 一台老 iRiver D8 的 NAND 里固件损坏，开不了机。这台机器的资料在网上几乎绝迹，能找到的线索主要来自司徒大哥（steward-fu）分享的固件包与教程。在他的包基础上，我重新做出了可用的刷机包，一步一步把 4GB NAND 写回去。
 
 - 🌐 网页详情：[zhengba-lab.pages.dev/#p/iriver-d8](https://zhengba-lab.pages.dev/#p/iriver-d8)
-- 📦 刷机包：见 [`firmware/`](../firmware/)（或 Releases）
+- 📦 **下载（Release）**：[d8-restore-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/d8-restore-v1)（成品恢复包 158 MB + 4 GB NAND dump 分卷）
 - 🔗 资料来源：[司徒大哥的教学站](https://steward-fu.github.io/website/index.htm)
 
 ## 机器关键参数

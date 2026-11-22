@@ -1,7 +1,10 @@
-# tapion / SURO CARBON（BQ Aquaris X3）折腾记录表
+# BQ Aquaris X3（tapion / SURO CARBON）折腾记录
 
 > 记录时间：2026-11-17，GSI 折腾更新 2026-11-22　设备 adb serial：`ad75c25f`　定位：Wi-Fi 玩具 / 收藏机
 > 安全边界：仅做只读备份、root 与本机分析；**不提供写 IMEI / 改号 / 恢复订阅的任何操作指引**。
+
+- 📦 **下载（Release）**：[EDL 全分区备份 v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-edl-v1)（64 分区 6.8 GB，3 卷）· [Android 9 GSI 实验包 v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-gsi-v1)（phh v123 + Magisk boot）
+- 🌐 **网页详情**：[zhengba-lab.pages.dev](https://zhengba-lab.pages.dev/#p/tapion-suro-carbon)
 
 ## 一、结论速览（TL;DR）
 

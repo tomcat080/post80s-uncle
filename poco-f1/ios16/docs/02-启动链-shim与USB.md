@@ -85,4 +85,10 @@ clk master off
 | `shim-boot-bt1.img` | 只带 `sweetwlan=2 sweetbt=1` 的早期版 | `52085fe0152d0fc7d6ce76b5bfd2aa761348ae0cdbed935873feb2d04e993d0d` |
 | `shim-boot-usbpow2.img` | 不带 BT，panic / 显示异常时的最小回滚 | `fec9e9731a02da9f63d4eb7877e77f83b18e6aa88a029500bd9de556a8a7f74b` |
 
-注意：这些镜像目前只在 `fastboot boot` 临时生效，**boot 分区里仍是旧的 `shim-boot.img`（不带 BT 参数）**，尚未固化。
+注意：这些镜像原先只在 `fastboot boot` 临时生效。**2026-11-22 已把 `shim-boot-aks2.img` 固化进 `boot` 分区**（`fastboot -s 2b8c9438 flash boot shim-boot-aks2.img`，分区 0x3FFC000 / 67 MB，写入 OKAY 0.078 s），并做了冷启动验证：25 s 起 ECM、48 s SSH 可用、BT 固件下载完后 `hcitest` 三条命令全 status 0。回滚一条命令：
+
+```bash
+fastboot -s 2b8c9438 flash boot shim-boot-bt2.img    # AKS 修复前版本
+fastboot -s 2b8c9438 flash boot shim-boot-usbpow2.img # 不带 BT 的最小回滚
+```
+
