@@ -328,8 +328,24 @@ fastboot reboot
 | 系统 | ✅ | `ro.build.fingerprint=...treble_arm64_bvN/phhgsi_arm64_ab:9/PQ3B.190801.002/191210:userdebug/test-keys`，槽 `_b`，`boot_completed=1` |
 | 中文 | ✅ | `persist.sys.locale=zh-CN` 重启后保持；锁屏"没有 SIM 卡/已充满电/12月11日周三"全简体中文 |
 | 联网 | ✅ | wlan0 `172.16.11.239/21`；Google generate_204 探测被墙会误报"无网络"，实际内网通 |
-| root | ⚠️ 半到位 | boot 内 Magisk 29.0（29000），`adb root` 可用；但 GSI 预置的 2019 老 `/system/xbin/su` 与 Magisk `/sbin/su` 并存，普通 shell `su` 报 `request rejected (2000)`，待修 |
+| root | ✅ | boot 内 Magisk 29.0（29000），普通 shell `su -c id` → `uid=0(root) context=u:r:magisk:s0`。修复见下 |
 | 相机 | ❌ 死结 | 见 12.4 |
+
+### 12.3.1 root 修复（su 被拒的根因与三段修法）
+
+Magisk 主页弹"异常状态：检测到不属于 Magisk 的 su 文件"——phh GSI 镜像自带 2019 年的 `/system/xbin/su`（`-rwsr-x--- root shell`），Magisk 检测冲突后**拒绝所有 su 请求**（`su: request rejected (2000)`），即使数据库 policies 表已授权也无效。SELinux permissive 也不能绕过（已排除 policy 问题）。
+
+```bash
+# ① 删除 GSI 预置老 su（本机 / 即 system，不是 /system 挂载点）
+adb root
+adb shell 'magisk --unlock-blocks; mount -o rw,remount /'
+adb shell 'cp /system/xbin/su /data/local/tmp/su.phh-backup; rm -f /system/xbin/su'
+adb shell 'mount -o ro,remount /'
+# ② Magisk app 主页弹"修复运行环境"→ 确定（自动重装+重启）；若未弹则手动重启一次
+# ③ 重启后 Magisk app → 超级用户 → [SharedUID] Shell / com.android.shell 开关打开
+# 验证
+adb shell 'su -c id'   # uid=0(root) ... context=u:r:magisk:s0
+```
 
 ### 12.4 相机：修好服务自启，剩下 HAL 死结
 
@@ -370,6 +386,6 @@ mm_stream_streamon: Module StreamON failed: rc=-1
 - [x] 整机分区离线备份（方向 1）：`dumps/partitions/`，64 分区 + 双 GPT，清单 `MANIFEST.sha256.txt`；仅排除 userdata。
 - [x] GSI 实测（方向 3）：Android 9 / phh v123 vanilla 点亮，中文 / ADB / Wi-Fi 持久化；Android 14 跨代 bootloop。详见第十二节。
 - [ ] 相机死结：换 GSI 变体（gapps 版或其他 phh v1xx）试相机，或找厂商专用 camera blob。
-- [ ] Magisk 普通 shell `su` 授权：GSI 预置 2019 老 su 与 Magisk 29 冲突，`su -c id` 报 request rejected (2000)；adb root 可用，待修。
+- [x] Magisk 普通 shell root 修复：GSI 预置老 `/system/xbin/su` 触发 Magisk"异常状态"→ 拒绝所有 su。三步修复：① `magisk --unlock-blocks` + `mount -o rw,remount /`（本机 / 即 system），备份后 `rm /system/xbin/su`；② Magisk app 弹"修复运行环境"点确定（重装+重启）；③ 超级用户标签把 `[SharedUID] Shell` 开关打开。最终 `su -c id` → `uid=0(root) context=u:r:magisk:s0`。
 - [ ] secure fork 锁机逻辑离线分析（方向 2）。
 - [ ] Magisk App 提示可升 30.6：建议保持 29.0；若升级需重新走"修补文件"流程并备份当前镜像。
