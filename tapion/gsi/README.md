@@ -1,4 +1,6 @@
-# tapion GSI 折腾配套文件
+# tapion · GSI 折腾（Android 9 移植）
+
+设备总览、身份鉴定、EDL 备份与 root 全过程见 [../README.md](../README.md)（第十二节为 GSI 全程记录）。本目录只放 GSI 这一方向的配套文件。
 
 | 文件 | 用途 | 来源 / 说明 |
 |---|---|---|

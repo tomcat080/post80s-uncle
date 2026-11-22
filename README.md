@@ -32,20 +32,24 @@ images/                     # 只放跨项目复用的素材
 - **镜像不进仓库**：GitHub 单文件硬上限 100 MB、历史永久保留二进制；机型专属的 boot.img / 内核 / 根镜像一律发 Release，README 里挂链接。
 - **机型内部按方向分**：同一台机器可能先刷 Linux 再刷 iOS，方向混在一个 README 里会越来越难读。
 - **firmware 只收通用件**：单机型专属的东西放回该机型目录，避免 `firmware/` 变成大杂烩。
+- **只有一个方向的设备不套空壳**：像 iRiver D8、小米路由 4C 这种只干过一件事的机器，长文就是它的记录，`README.md` 直接放在设备目录下，不额外造一层空的方向目录；等出现第二个方向再拆。
+
 
 ## 目录结构
 
 ```
 .
-├── iriver-d8/      # iRiver D8 固件恢复（最完整的一篇）
+├── iriver-d8/      # iRiver D8 固件恢复（单方向，长文即记录）
 │   ├── README.md
 │   └── images/
 ├── tapion/         # BQ SURO CARBON 工程机（tapion / Aquaris X3）
-│   ├── README.md
-│   └── files/      # 小体积配套文件（bootanimation、APK、脚本）
-├── poco-f1/        # POCO F1：Kupfer Linux + iOS 16.7.16 移植
-│   └── ios16/      # iOS16 档案：docs / patches / workflows / scripts / images / logs
-├── xiaomi-4c/      # 小米路由 4C 刷 OpenWrt
+│   ├── README.md   # 身份 / BL / root / EDL 备份 / OTA 排查 总记录
+│   └── gsi/        # Android 9 GSI 方向：配套文件（开机动画、Open Camera、相机自启脚本）
+├── poco-f1/        # POCO F1：两个方向各自成目录
+│   ├── README.md   # 设备总览 + 两方向索引
+│   ├── ios16/      # iOS16 档案：docs / patches / workflows / scripts / images / logs
+│   └── linux/      # Kupfer Linux (Phosh)：过程记录待补
+├── xiaomi-4c/      # 小米路由 4C 刷 OpenWrt（单方向）
 ├── firmware/       # 跨机型通用原厂包 / 工具链
 └── images/         # 跨项目通用素材
 ```

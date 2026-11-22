@@ -294,6 +294,8 @@ fastboot reboot
 
 > 目标是验证"同代 GSI 能否点亮 + 中文 + 联网 + root"。结论：**Android 9 GSI 成功，相机是硬件级死结**。
 
+> 这一方向的配套文件（开机动画、Open Camera、相机自启修复脚本）已归到 [gsi/](gsi/README.md)。
+
 ### 12.1 两次尝试对比
 
 | 轮次 | GSI | 结果 | 卡点 |
