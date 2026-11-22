@@ -42,7 +42,7 @@ poco-f1/ios16/
 | 蓝牙硬件链 | ✅ | WCN3990 上电、`crbtfw21.tlv`/`crnv21.bin` 下载、3 Mbaud、BD_ADDR 改写全部成功；`hcitest` 实测 HCI Reset/Read Local Version/Read BD_ADDR 全 `status 0` |
 | 蓝牙用户态 | ⏸ 已停 | 2026-11-22 决定收手。已定位：`BlueTool -R` 等 IOKit 节点 `AppleConvergedIPCInterface`（读 `ACIPCInterfaceTransport`，非 `skywalk` 值才走备选路径）；内核对 ctl 12/13 都可用（`hcitest -n` 两条全 `status 0`）；`bluetoothd` 约 53 秒一次 SIGBUS @ dyld private memory+8；换成 `exit 0` 桩后它仍未开任何 kctl —— 卡点不在我们的通道 |
 | BLE 扫描（自编 `btscan`） | ✅ | LE Set Scan Params / Enable 全 `status 0`；12 秒收到 **203 条广播 / 6 台设备**，含设备名 `Galaxy Fit2 (0E14)`，RSSI −41…−82 dBm |
-| Wi-Fi | ⏸ | `sweetwlan=1` 探针跑过；P3（MSS 内存池 + hyp-assign + MBA）未开工，风险 high |
+| Wi-Fi | 🔬 P3 第 0 步完成 | `sweetwlan=4` 只读预检实测：TZ 认 SMC64（`fn 0x42000601` → `status 0`）、**SCM ASSIGN_MEM 可用（result 1）**、MBA `0x96900000` 读通且全 0、TCSR halt 三寄存器全 0；P3 第 1 步（hyp-assign + MBA load）待开工 |
 | 音频 | ❌ | 无驱动；`VirtualAudio` 已移入 `HAL.disabled` 绕过崩溃 |
 | 内核重建 | ✅ | 自建 `tomcat080/ios-xnu` + Actions，**约 10 分钟出内核**；补丁集与在跑内核同源 |
 

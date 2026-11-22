@@ -54,3 +54,46 @@
 - 这台机器的 TZ 用 SMCCC 还是 legacy SCM 调用约定。
 - MBA carve-out 当前是否已被 XPU 锁（读通但写被拒也能从返回码看出来）。
 - QHEE 是否允许 HLOS 对 MBA 窗口做 assign（topaz 在 SM6225 上可以，SDM845 未验证）。
+
+## 7. 第 0 步实测结果（2026-11-22 16:20，`sweetwlan=4`）
+
+内核：CI run `45001173418`（commit `1b8c9c1`，patch `0143-beryllium-mss-preflight.patch`），
+boot：`shim-boot-mss.img`（17,313,792 B，sha256 `5dba596efead5316…`），cmdline 用
+`sweetwlan=4 sweetwlandelay=30` 替换原 `sweetwlan=2 sweetbt=1 sweetbtsk=1 sweetbtlog=200`。
+
+console 原文（`SWEET MSS` 前缀，六行）：
+
+```
+SWEET MSS: preflight start (read-only): no hyp-assign, no reset release
+SWEET MSS: SCM query fn=0x42000601 arg1=0x2000c16
+SWEET MSS: SCM ASSIGN_MEM svc 0x0C cmd 0x16 available: status=0 result=1
+SWEET MSS: MBA 0x96900000 +0: 00000000 00000000 00000000 00000000 (zero (not loaded))
+SWEET MSS: TCSR halt_q6 00000000 halt_modem 00000000 halt_nc 00000000
+SWEET MSS: preflight done (QDSP6 0x4080000 / RMB 0x4180000 still not read)
+```
+
+### 7.1 三个未决问题，两个有答案
+
+1. **调用约定**：`fn=0x42000601`（`SCM_64 | SCM_SIP | SVC_INFO | CMD_INFO_AVAIL`）返回
+   `status=0`，说明这台机器的 TZ 认 **SMCCC/SMC64 编码**，跟 GPU 那条用的
+   `0x4200xxxx`（`0103` 补丁里 `scm_smccc()`）完全一致，不需要走 legacy SCM 约定。
+2. **ASSIGN_MEM 是否存在**：`result=1` —— **可用**。也就是说 HLOS→MSS_MSA 的
+   hyp-assign（`qcom_scm_assign_mem`，SIP svc `0x0C` cmd `0x16`）这一侧是受支持的，
+   P3 第 1 步不缺这个入口。
+3. **XPU 是否已锁 MBA 窗口**：读得到且全 0（读通、没悬挂），但"能读"不等于"能写"，
+   是否被 XPU 拦写要等第 1 步真正 assign/写才见分晓。
+
+### 7.2 顺带确认的
+
+- MBA carve-out 在 modem 复位状态下**读不悬挂**（plan §5 里那条 "register read hangs the bus"
+  的风险这条路径上没有出现）。
+- TCSR halt 三寄存器（`0x1f63000/0x1f65000/0x1f64000`）全 0，说明 MSS 处于 halt 状态、
+  没有被别的子系统拉起来过。
+- 无 panic、无自动重启；冷启动后 SSH 照常可用。
+
+### 7.3 第 1 步要动的东西（现在才需要慎重）
+
+- `hyp-assign` MBA 窗口 → 从 `modem` 分区只读读 `image/mba.mbn`（238,304 B）→ 拷进
+  `0x96900000` → 写 `RMB_MBA_IMAGE_REG`（`0x4180000 + 0x00`）→ 放开 Q6 reset →
+  轮询 `RMB_PBL_STATUS`/`RMB_MBA_STATUS`。
+- 这步开始才真正碰 QHEE 与 XPU：写被拒的返回码、SMMU fault 复位都要按闸门单独测。
