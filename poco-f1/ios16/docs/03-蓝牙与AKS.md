@@ -109,3 +109,28 @@ process vmd[229] thread 2154 caught burning CPU! (65% over ~137 s)
 4. 给 `vmd` 的 WrapKey 调用加计数，区分"真循环"和"正常高频"。
 
 配套工具与文档：`Bergamota-main/docs/BT_IOS_TRANSPORT.md`（§1.3 是 bluetoothd 存在性判据原文，§8 明确禁止设 `BT_DEVICE_ADDRESS`）、`tools/sweetnet/{hcitest.c,bluetool-stub.c}`。
+
+## 六、2026-11-22 现场回归（归档镜像实测）
+
+用仓库 Release 里的 `shim-boot-aks2.img`（SHA256 `fa6996f7…c366052`）在本机重新跑了一遍，确认归档产物可复现：
+
+| 阶段 | 实测 |
+|---|---|
+| `fastboot -s 2b8c9438 boot shim-boot-aks2.img` | 0.57 s 发完，正常起 |
+| ECM 网卡 | 12 s 出现 `en13`（192.168.7.1），USB 枚举名 `Sweet iOS (USB Ethernet)` |
+| SSH 22 端口 | 66 s 可用，`ping 192.168.7.2` 往返 1.1–3.4 ms |
+| HCI 三条命令 | 全 `status 0`：`0x0c03`、`0x1001`（manufacturer `0x001d` / LMP `0x02be`）、`0x1009`（BD_ADDR `02:00:5e:77:b0:01`） |
+| 本轮 AKS | `sel 10`（securityd 5×，`0x0`）、`sel 17` 74×、`sel 35` 29×，全部 `0x0`；`sel 8` 未出现在本轮日志 |
+
+**新踩的坑（重要判据）**：这次第一次跑 `hcitest` 直接失败：
+
+```
+CTLIOCGINFO com.apple.uart.bluetooth: No such file or directory (is sweetbt=1 up? look for 'SWEET BT: transport up' in the kernel log)
+```
+
+原因不是内核参数没生效，而是 **WCN3990 的 BT 固件还在分段下载**——console 里 `SWEET WLAN: BT fw patch: segment N/729` 一路爬到 50% 才过半，本轮大约 **2 分钟**才出现 `SWEET BT: transport up`。`sweetbt=1` 只保证后面会注册 kctl，不保证"现在就绪"。
+
+所以复现时判据按顺序来：先等 console 出现 `SWEET BT: transport up: UART 3000000 baud … BD_ADDR 02:00:5e:77:b0:01`，再去跑 `hcitest`；否则拿到的一定是 `CTLIOCGINFO … No such file or directory`。
+
+本轮 console 里 `bluetoothd` 侧只见到 1 次 `exec BlueTool`，**没有**出现上一轮那两条 `SWEET Sandbox: bluetoothd privilege 12000/1002 denied`；设备上没有 `ps`，存活与否无法直接确认，仍需先做"kctl open 打进程名"那个补丁才能定论。
+
