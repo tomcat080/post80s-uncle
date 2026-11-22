@@ -10,7 +10,7 @@
 - Bootloader 已解锁（orange），EDL 9008 可枚举、通用 SDM660 firehose 可读写；**已通过 Magisk 29.0 获取 root（双槽补丁镜像均已刷入）**。
 - 公开渠道**不存在** tapion 原厂固件 / boot.img / TWRP / Lineage 适配；网上固件站（gofirmware、firmwareoficial 等）均为 SEO 垃圾页，无真实该机包。
 - 基带 NV 已初始化但**未写号（IMEI 全 0）**；不具备正常通话条件，Wi-Fi / 蓝牙不受影响。
-- **2026-11-22 更新**：Android 9 同代 GSI（phh v123 vanilla）已在 **b 槽完整点亮**，中文 / ADB / Wi-Fi 可用，重启持久化；相机因原厂 HAL 接口不兼容无法出图（详见第十二节）。设备当前停在 b 槽 GSI。
+- **2026-11-22 更新**：Android 9 同代 GSI（phh v123 vanilla）已在 **b 槽完整点亮**，中文 / ADB / Wi-Fi 可用，重启持久化；相机黑屏真因为**物理三档开关拨在摄像头关闭档**（非软件/GSI 问题），拨开即可（详见第十二节）。设备当前停在 b 槽 GSI。
 
 ## 二、设备身份表
 
@@ -329,7 +329,7 @@ fastboot reboot
 | 中文 | ✅ | `persist.sys.locale=zh-CN` 重启后保持；锁屏"没有 SIM 卡/已充满电/12月11日周三"全简体中文 |
 | 联网 | ✅ | wlan0 `172.16.11.239/21`；Google generate_204 探测被墙会误报"无网络"，实际内网通 |
 | root | ✅ | boot 内 Magisk 29.0（29000），普通 shell `su -c id` → `uid=0(root) context=u:r:magisk:s0`。修复见下 |
-| 相机 | ❌ 死结 | 见 12.4 |
+| 相机 | ⚠️ 待物理拨开关 | 真因是三档硬件开关在摄像头关闭档，拨开即可；非 GSI 缺陷。见 12.4 |
 
 ### 12.3.1 root 修复（su 被拒的根因与三段修法）
 
@@ -363,14 +363,22 @@ adb reboot   # 验证 init.svc.vendor.camera-provider-2-4 = running
 
 **问题 2（app 层绕过）：AOSP Camera2 必崩。** 自带 `com.android.camera2`（2.0.002）报 `CameraDeviceInfo.isFacingFront()` NPE。改用 F-Droid 版 **Open Camera**（`net.sourceforge.opencamera` v1.56.2 / vercode 96），app 稳定、中文界面、快门/切换/图库 UI 齐全。
 
-**问题 3（死结）：取景器黑屏。** Open Camera 能连上摄像头（Active Camera Clients 有它），但底层报：
+**问题 3（真因已查明：物理硬件开关，非软件问题）：取景器黑屏。** Open Camera 能连上摄像头（Active Camera Clients 有它）但无画面，日志报：
 ```
-processCaptureRequest: Function not implemented (-38)
-Camera3-Device: Unable to submit capture request to HAL device: Function not implemented (-38)
-sensor_write_i2c_setting_array: failed
+processCaptureRequest: Function not implemented (-38)      ← 表象
+sensor_write_i2c_setting: failed → sensor_apply_exposure: failed
 mm_stream_streamon: Module StreamON failed: rc=-1
 ```
-已排除：① 强制 Camera1 API（写 `preference_camera_api=camera1`，底层仍走 Camera3 桥接）；② SELinux permissive（无相机相关 avc denied，排除 policy）。结论：原厂高通 camera HAL 3.x 缺 phh GSI framework 调用的 capture request 接口实现（ENOSYS -38），是 vendor HAL 与 GSI 的深层 ABI 不匹配，配置层面修不了。可能的破局方向：换 GSI 变体（gapps 版 / 其他 phh v1xx）或找厂商专用 camera blob。
+用完整 root 抓 **dmesg** 看到真正根因：
+```
+msm_sensor_power_up : Camera slider disabled                 ← 摄像头硬件开关关闭！
+msm_sensor_match_id: imx486 / s5k4h7yx / s5k5e9yx: read id failed rc -22
+i2c-msm-v2: NACK: slave not responding, ensure its powered   ← sensor 没供电
+```
+本机有**物理三档硬件开关**（可切断射频 / 摄像头 / 麦克风），当前拨在摄像头关闭档 → sensor 不供电 → I2C 全 NACK → streamon 失败 → 连锁报 ENOSYS -38。
+- **已排除**：① 强制 Camera1 API（底层仍走 Camera3 桥接）；② SELinux permissive（无 avc denied）；③ HAL ABI 不匹配（早期误判，dmesg 证明 HAL 正常，是 sensor 没电）。
+- **解法**：**物理拨动侧面开关到摄像头开启档**，然后重开相机即可。软件无法绕过（slider-switch 靠 GPIO input 事件上报，sysfs 无可写状态节点）。
+- 4 个 sensor：imx486（主）/ s5k4h7yx / s5k5e9yx 等。原厂 BqCamera app 不在 vanilla GSI 中（vendor 配置的 `com.bq.camerabq`）。
 
 **附带踩坑**：用 `sed -i 's/.../...\n.../'` 改 Open Camera 的 shared_prefs 时，本机 sed 不认 `\n`，会把 XML 写成一行损坏文件，app 启动后重建配置、注入的值丢失。改用本地生成完整 XML 再 `adb push` + `chown 10075:10075` + `chmod 660`。
 
@@ -385,7 +393,7 @@ mm_stream_streamon: Module StreamON failed: rc=-1
 - [x] K2P Wi-Fi：已连接。SSID `K2P`，BSSID `82:8f:d4:79:c2:69`，5GHz（5220MHz），IP `172.16.11.36/21`，网关 `172.16.10.1`，DNS `114.114.114.114`，外网 ping 0% 丢包；网络代理 `172.16.14.227:12334`。
 - [x] 整机分区离线备份（方向 1）：`dumps/partitions/`，64 分区 + 双 GPT，清单 `MANIFEST.sha256.txt`；仅排除 userdata。
 - [x] GSI 实测（方向 3）：Android 9 / phh v123 vanilla 点亮，中文 / ADB / Wi-Fi 持久化；Android 14 跨代 bootloop。详见第十二节。
-- [ ] 相机死结：换 GSI 变体（gapps 版或其他 phh v1xx）试相机，或找厂商专用 camera blob。
+- [ ] 相机：物理拨动侧面三档开关到摄像头开启档，重开 Open Camera 验证出图（真因已定位，见 12.4）。
 - [x] Magisk 普通 shell root 修复：GSI 预置老 `/system/xbin/su` 触发 Magisk"异常状态"→ 拒绝所有 su。三步修复：① `magisk --unlock-blocks` + `mount -o rw,remount /`（本机 / 即 system），备份后 `rm /system/xbin/su`；② Magisk app 弹"修复运行环境"点确定（重装+重启）；③ 超级用户标签把 `[SharedUID] Shell` 开关打开。最终 `su -c id` → `uid=0(root) context=u:r:magisk:s0`。
 - [ ] secure fork 锁机逻辑离线分析（方向 2）。
 - [ ] Magisk App 提示可升 30.6：建议保持 29.0；若升级需重新走"修补文件"流程并备份当前镜像。
