@@ -25,7 +25,7 @@
 
 | 设备 | 项目 | 状态 | 记录 |
 |---|---|---|---|
-| BQ SURO CARBON (tapion) | 工程机身份鉴定 / BL 解锁 / root / EDL 全量备份 | 已 root，6.8GB 全分区备份完成 | [详情](tapion/README.md) |
+| BQ SURO CARBON (tapion) | 身份鉴定 / BL 解锁 / root / EDL 全量备份 / Android 9 GSI | 已 root，6.8GB 备份完成；GSI 已点亮（中文+联网，相机 HAL 死结） | [详情](tapion/README.md) |
 | iRiver D8 | 固件恢复 / NAND 重写 | 刷机包自制成功，启动链排查中 | [详情](iriver-d8/README.md) |
 | POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | 整理中 |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |

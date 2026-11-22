@@ -1,6 +1,6 @@
 # tapion / SURO CARBON（BQ Aquaris X3）折腾记录表
 
-> 记录时间：2026-11-17　设备 adb serial：`ad75c25f`　定位：Wi-Fi 玩具 / 收藏机
+> 记录时间：2026-11-17，GSI 折腾更新 2026-11-22　设备 adb serial：`ad75c25f`　定位：Wi-Fi 玩具 / 收藏机
 > 安全边界：仅做只读备份、root 与本机分析；**不提供写 IMEI / 改号 / 恢复订阅的任何操作指引**。
 
 ## 一、结论速览（TL;DR）
@@ -10,6 +10,7 @@
 - Bootloader 已解锁（orange），EDL 9008 可枚举、通用 SDM660 firehose 可读写；**已通过 Magisk 29.0 获取 root（双槽补丁镜像均已刷入）**。
 - 公开渠道**不存在** tapion 原厂固件 / boot.img / TWRP / Lineage 适配；网上固件站（gofirmware、firmwareoficial 等）均为 SEO 垃圾页，无真实该机包。
 - 基带 NV 已初始化但**未写号（IMEI 全 0）**；不具备正常通话条件，Wi-Fi / 蓝牙不受影响。
+- **2026-11-22 更新**：Android 9 同代 GSI（phh v123 vanilla）已在 **b 槽完整点亮**，中文 / ADB / Wi-Fi 可用，重启持久化；相机因原厂 HAL 接口不兼容无法出图（详见第十二节）。设备当前停在 b 槽 GSI。
 
 ## 二、设备身份表
 
@@ -212,7 +213,7 @@ fastboot reboot
 |---|---|---|---|---|---|
 | 1 | 整机分区离线备份（system_a / vendor_a / modem_a / xbl / abl / dsp / bluetooth / vbmeta 等） | **已完成** | EDL `rl` 全分区导出至 `dumps/partitions/`，含 SHA256 清单；仅排除 userdata | 占用 Mac 磁盘；误写分区可变砖 | 已作为后续动系统 / 移植的兜底回滚点 |
 | 2 | 离线分析 secure fork 激活 / 远程锁逻辑 | 中 | root 后可读 `/system`、`/vendor`、init rc、`BqFirstBoot`、远程锁服务与 sepolicy | 误删系统组件可能导致无法启动；改动前先备份 | 解包 system/vendor，搜激活校验、远程鉴权、账号绑定相关包名与服务，判断是本地锁还是依赖已死后端 |
-| 3 | GSI 通用系统镜像试用（Android 10/11/12 arm64） | 中低 | `ro.treble.enabled=true` 是前提；但 vendor 为 Android 9 blob，无设备适配 | modem / 相机 / 传感器 / 指纹 / 触摸可能异常；secure fork vendor 可能有额外校验 | 先用 `fastboot boot` 临时启动 GSI 验证，不直接刷写；能进系统再逐项测外设 |
+| 3 | GSI 通用系统镜像试用（Android 9 同代） | **已实测：Android 9 GSI 点亮**；Android 14 跨代 bootloop | `ro.treble.enabled=true`；vendor 为 Android 9 blob，**必须选同代 GSI**。Android 9 / phh v123 vanilla 成功 | 相机 HAL 与 GSI 深层不兼容（见第十二节）；userdata 需格式化为明文 | 已刷 b 槽验证；退路是 `set_active a` + EDL 全备份 |
 | 4 | LineageOS 等第三方 ROM 移植 | 低 | 无 tapion 适配、无内核源码、社区基数为零；可参照 zangyapro（X2 Pro，同 SDM660），但设备树 / 分区布局 / 调制解调器差异大 | 工作量极大，变砖风险高 | 暂不投入；除非方向 1、2 产出可复用的分区与 blob 清单 |
 | 5 | TWRP / 自定义 recovery | 低 | A/B 设备且 ramdisk 位于 boot；无现成适配 | 同上 | 暂缓；若 GSI 方向走通再评估 |
 | 6 | 官方 OTA / 升级 Android 10+ | 死路 | OTA 后端域名出售下线，厂商破产，机型从未零售 | — | 不再追踪官方更新 |
@@ -289,9 +290,86 @@ fastboot reboot
 - bkerler/edl 仓库：https://github.com/bkerler/edl
 - Loaders 子模块：https://github.com/bkerler/Loaders
 
-## 十二、待办与遗留
+## 十二、GSI 折腾记（2026-11-22）
+
+> 目标是验证"同代 GSI 能否点亮 + 中文 + 联网 + root"。结论：**Android 9 GSI 成功，相机是硬件级死结**。
+
+### 12.1 两次尝试对比
+
+| 轮次 | GSI | 结果 | 卡点 |
+|---|---|---|---|
+| 1 | TrebleDroid Android 14（`system-td-arm64-vanilla`，2.06GB） | ❌ bootloop | 版本跨太大（vendor Android 9 / system Android 14），直接起不来；已切回 a 槽 |
+| 2 | phh v123 `system-arm64-ab-vanilla-nosu.img.xz`（AOSP 9.0，451MB 压 / 1441MB 解） | ✅ 完整点亮 | 卡开机动画 → 查出是 `/data` FDE 加密格式不匹配 |
+
+### 12.2 Android 9 GSI 刷入步骤（已验证）
+
+```bash
+# 1. 镜像本身就是 sparse（magic ed26ff3a），免 img2simg 转换，直接刷
+xz -dk phh-v123-arm64-ab-vanilla.img.xz        # 解压 1441MB
+adb reboot bootloader
+fastboot flash system_b phh-v123-arm64-ab-vanilla.img
+fastboot flash boot_b  tapion_boot_a_magisk.img  # 用 a 槽已 Magisk patch 的 boot（两槽均 64MB）
+fastboot erase vbmeta_b                          # 跳过 AVB 校验（本机 vbmeta 无 magic）
+fastboot set_active b
+fastboot reboot
+```
+
+**关键坑 1：`/data` 加密格式。** 首次启动卡开机动画——adb 能进、native HAL 全活（modem/audio/sensor），但无 zygote/system_server。查 footer 有 `aes-xts` / `DKMK` = 原厂 **FDE 全盘加密**，而 phh GSI 的 `/vendor/etc/fstab.qcom` 里 /data 行是明文（`wait,check,resize,crashcheck,quota,reservedsize=128M`），挂不上 → vold 报 `Read-only file system` → framework 起不来。
+- `fastboot erase userdata` **不够**（全 0 后 fs_mgr 不认），必须 **`fastboot format:ext4 userdata`**（mke2fs 写空 ext4）。格式化后约 30s 点亮。
+- `metadata` 分区不存在（erase 报 Check device console），无妨——本机用 FDE 不用 metadata 加密。
+- userdata 是 a/b 共享分区：格式化后切回 a 槽原厂会因 FDE fstab 重新加密并走首次设置向导（EDL 全备份可完全恢复）。
+
+**关键坑 2：dump boot 分区。** 本机 `dd` 是精简版，不认 `bs=1M`，必须用 `bs=1048576`。ramdisk 是 gzip 压缩的，`strings` 搜不到 magisk 标记属正常；boot_a ≠ boot_b 即证明 patch 过。
+
+### 12.3 验收结果（重启后持久化）
+
+| 项 | 状态 | 证据 |
+|---|---|---|
+| 系统 | ✅ | `ro.build.fingerprint=...treble_arm64_bvN/phhgsi_arm64_ab:9/PQ3B.190801.002/191210:userdebug/test-keys`，槽 `_b`，`boot_completed=1` |
+| 中文 | ✅ | `persist.sys.locale=zh-CN` 重启后保持；锁屏"没有 SIM 卡/已充满电/12月11日周三"全简体中文 |
+| 联网 | ✅ | wlan0 `172.16.11.239/21`；Google generate_204 探测被墙会误报"无网络"，实际内网通 |
+| root | ⚠️ 半到位 | boot 内 Magisk 29.0（29000），`adb root` 可用；但 GSI 预置的 2019 老 `/system/xbin/su` 与 Magisk `/sbin/su` 并存，普通 shell `su` 报 `request rejected (2000)`，待修 |
+| 相机 | ❌ 死结 | 见 12.4 |
+
+### 12.4 相机：修好服务自启，剩下 HAL 死结
+
+**问题 1（已根治）：相机 provider 服务不启动。** vendor rc `/vendor/etc/init/android.hardware.camera.provider@2.4-service.rc` 里有 `disabled`，且只在 `on property:vold.decrypt=trigger_restart_framework` 时 start。data 改为明文后该属性永不触发 → 服务永不启动。修法：
+
+```bash
+adb root
+adb shell 'magisk --unlock-blocks; mount -o rw,remount /vendor'
+adb shell 'cp /vendor/etc/init/android.hardware.camera.provider@2.4-service.rc /vendor/etc/init/camera.rc.bak'
+adb shell 'sed -i "/^    disabled$/d" /vendor/etc/init/android.hardware.camera.provider@2.4-service.rc'
+adb reboot   # 验证 init.svc.vendor.camera-provider-2-4 = running
+```
+
+摄像头硬件本身完全正常：`dumpsys media.camera` 识别 4 摄像头 / 8 逻辑设备，`/dev/video0-6,32,33` 齐全。
+
+**问题 2（app 层绕过）：AOSP Camera2 必崩。** 自带 `com.android.camera2`（2.0.002）报 `CameraDeviceInfo.isFacingFront()` NPE。改用 F-Droid 版 **Open Camera**（`net.sourceforge.opencamera` v1.56.2 / vercode 96），app 稳定、中文界面、快门/切换/图库 UI 齐全。
+
+**问题 3（死结）：取景器黑屏。** Open Camera 能连上摄像头（Active Camera Clients 有它），但底层报：
+```
+processCaptureRequest: Function not implemented (-38)
+Camera3-Device: Unable to submit capture request to HAL device: Function not implemented (-38)
+sensor_write_i2c_setting_array: failed
+mm_stream_streamon: Module StreamON failed: rc=-1
+```
+已排除：① 强制 Camera1 API（写 `preference_camera_api=camera1`，底层仍走 Camera3 桥接）；② SELinux permissive（无相机相关 avc denied，排除 policy）。结论：原厂高通 camera HAL 3.x 缺 phh GSI framework 调用的 capture request 接口实现（ENOSYS -38），是 vendor HAL 与 GSI 的深层 ABI 不匹配，配置层面修不了。可能的破局方向：换 GSI 变体（gapps 版 / 其他 phh v1xx）或找厂商专用 camera blob。
+
+**附带踩坑**：用 `sed -i 's/.../...\n.../'` 改 Open Camera 的 shared_prefs 时，本机 sed 不认 `\n`，会把 XML 写成一行损坏文件，app 启动后重建配置、注入的值丢失。改用本地生成完整 XML 再 `adb push` + `chown 10075:10075` + `chmod 660`。
+
+### 12.5 当前状态与退路
+
+- 设备停在 **b 槽 GSI 桌面**，SELinux enforcing，相机服务自启修复保留，Open Camera 已装（取景器黑屏）。
+- **退路完好**：EDL 64 分区全备份（see 第四节）+ a 槽原厂 system/boot 完好；`fastboot set_active a` 可随时切回。
+- 大文件与镜像存放见仓库 Releases（`tapion-edl-v1`）；本轮 GSI 镜像 / boot dump 可视需要补充上传。
+
+## 十三、待办与遗留
 
 - [x] K2P Wi-Fi：已连接。SSID `K2P`，BSSID `82:8f:d4:79:c2:69`，5GHz（5220MHz），IP `172.16.11.36/21`，网关 `172.16.10.1`，DNS `114.114.114.114`，外网 ping 0% 丢包；网络代理 `172.16.14.227:12334`。
 - [x] 整机分区离线备份（方向 1）：`dumps/partitions/`，64 分区 + 双 GPT，清单 `MANIFEST.sha256.txt`；仅排除 userdata。
+- [x] GSI 实测（方向 3）：Android 9 / phh v123 vanilla 点亮，中文 / ADB / Wi-Fi 持久化；Android 14 跨代 bootloop。详见第十二节。
+- [ ] 相机死结：换 GSI 变体（gapps 版或其他 phh v1xx）试相机，或找厂商专用 camera blob。
+- [ ] Magisk 普通 shell `su` 授权：GSI 预置 2019 老 su 与 Magisk 29 冲突，`su -c id` 报 request rejected (2000)；adb root 可用，待修。
 - [ ] secure fork 锁机逻辑离线分析（方向 2）。
 - [ ] Magisk App 提示可升 30.6：建议保持 29.0；若升级需重新走"修补文件"流程并备份当前镜像。
