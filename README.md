@@ -3,6 +3,7 @@
 > 浙江台州，爱折腾旧电子设备的 80 后。这里是我第一手折腾记录的**原始档案库**——只记录、不教学，踩过的坑比成功更值得留底。
 
 - 🌐 **展示主页**：[zhengba-lab.pages.dev](https://zhengba-lab.pages.dev)
+- 📖 **在线教程**：[POCO F1 刷 iOS 16.7.16](https://zhengba-lab.pages.dev/tutorial-poco-f1-ios16.html)（站点项目卡 `#p/poco-f1-ios16` 是同源内容）
 - 📁 **本仓库**：过程记录、补丁、脚本、小体积素材（镜像走 Releases）
 - 🔗 **参考资料**：[司徒大哥的教学站](https://steward-fu.github.io/website/index.htm)
 
@@ -55,7 +56,7 @@ images/                     # 只放跨项目复用的素材
 |---|---|---|---|
 | BQ SURO CARBON (tapion) | 身份鉴定 / BL 解锁 / root / EDL 全量备份 / Android 9 GSI | 已 root，6.8GB 备份完成；GSI 已点亮（中文+联网，相机黑屏真因已定位为物理开关） | [详情](tapion/README.md) |
 | iRiver D8 | 固件恢复 / NAND 重写 | 刷机包自制成功，启动链排查中 | [详情](iriver-d8/README.md) |
-| POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | 整理中 |
+| POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | [详情](poco-f1/README.md) |
 | POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；蓝牙用户态推进中；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
