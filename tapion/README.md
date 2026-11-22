@@ -334,7 +334,7 @@ fastboot reboot
 | 中文 | ✅ | `persist.sys.locale=zh-CN` 重启后保持；锁屏"没有 SIM 卡/已充满电/12月11日周三"全简体中文 |
 | 联网 | ✅ | wlan0 `172.16.11.239/21`；Google generate_204 探测被墙会误报"无网络"，实际内网通 |
 | root | ✅ | boot 内 Magisk 29.0（29000），普通 shell `su -c id` → `uid=0(root) context=u:r:magisk:s0`。修复见下 |
-| 相机 | ✅ 已修复并实测 | 物理三档 Safety Switch 拨到第 1 档 Normal 后，Open Camera 前后摄均出图，4032×3016 JPEG 拍摄成功；非 GSI 缺陷。见 12.4 |
+| 相机 | ✅ 已修复并实测 | 物理三档 Safety Switch 拨到第 1 档 Normal 后，Open Camera 前后摄均出图，4032×3016 JPEG 拍摄成功；非 GSI 缺陷。已知瑕疵：快速连点切换偶发弹窗、再点一次恢复（见 12.4） |
 
 ### 12.3.1 root 修复（su 被拒的根因与三段修法）
 
@@ -390,6 +390,10 @@ i2c-msm-v2: NACK: slave not responding, ensure its powered   ← sensor 没供�
 - **解法（已实测有效）**：把左侧 Safety Switch 拨到**第 1 档 Normal**，无需重启，重开 Open Camera 即出图。软件无法绕过。
 - **验收结果（2026-11-22）**：拨到第 1 档后 `slider_int0_state=1`、`slider state=1`；Open Camera 后摄取景器实时出图、前摄（ID:2）也出图；点击快门成功保存 `/sdcard/DCIM/OpenCamera/IMG_20191211_004532.jpg`，**4032×3016 全分辨率 JPEG（2.4MB）**，Exif 机型 `Phh-Treble vanilla` / `treble_arm64_bvN`，logcat 有 `jpeg_hw w 4032 h 3016` + `QCamera JPEG callback status=0`。成像正常无黑屏/花屏/绿屏。
 - 4 个 sensor：imx486（主）/ s5k4h7yx / s5k5e9yx 等。原厂 BqCamera app 不在 vanilla GSI 中（vendor 配置的 `com.bq.camerabq`）。
+
+**已知小瑕疵（未根治，可接受）：快速连点切换摄像头偶发弹窗。** 慢速单次切换前后摄完全正常；但快速连续点切换时，Open Camera 1.56.2 会弹"打开相机失败。相机可能正被其它程序使用？ID:2/ID:4"，**再点一次即恢复**。日志证据：`EVICT device 2 client ... Evicted by same PID`（app 自己抢占自己的旧实例）+ 副摄实例初始化 `Failed to initialize camera "1": Function not implemented (-38)`。本质是 Open Camera 切换时序竞态 + 高通老 HAL 的边界问题，非功能故障。
+- 试过且无效：切 Camera2 API（已恢复 camera1）、升级 Open Camera（1.56.2 已是最新版）。
+- 换 App 结论：Fossify/Simple Camera 要求 Android 10+（改 minSdk 强装会 `NoSuchMethodError` 崩溃），Libre Camera 1.9.1 兼容 Android 9 但无切换按钮（多摄切换是该 App 未实现的 roadmap）。**Open Camera 仍是本机最优解**。
 
 > ⚠️ **折腾禁区**：这台机器读 `/sys/kernel/debug/gpio` 会触发内核 panic，掉进高通 ramdump 模式（USB PID 0x900e）。救援方法：底层发 SAHARA_RESET_STATE_MACHINE_ID(0x13) 复位协议状态机 + 带 sdm636 firehose loader 走 `sahara.cmd_reset()`，通常 1-2 轮即可拉回正常 adb（0x4ee7）。**永远不要读这个 debugfs 文件。**
 
