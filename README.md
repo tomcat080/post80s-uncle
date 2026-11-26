@@ -64,7 +64,7 @@ images/                     # 只放跨项目复用的素材
 | BQ Aquaris X3（工程机 tapion / SURO CARBON） | 身份鉴定 / BL 解锁 / root / EDL 全量备份 / Android 9 GSI | 已 root，6.8GB 备份完成；GSI 已点亮（中文+联网，相机黑屏真因已定位为物理开关） | [详情](tapion/README.md) |
 | iRiver D8 | 固件恢复 / NAND 重写 | 刷机包自制成功，启动链排查中 | [详情](iriver-d8/README.md) |
 | POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | [详情](poco-f1/linux/README.md) |
-| POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；自编 `btscan` 已扫到 6 台 BLE 设备；蓝牙用户态（`bluetoothd`）仍在攻；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
+| POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；蓝牙 HCI 三条命令 status 0；音频 PAS_INIT 在 TZ 挂死、WiFi 封存；无音频 stage 的 `aud_stable` 已发 Release | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
 | Moto G5S Plus（sanders） | 刷 Ubuntu Touch 24.04（系统出自第三方移植 [EEMuk/ubuntu-touch-motorola-sanders](https://github.com/EEMuk/ubuntu-touch-motorola-sanders)，已署名）/ SSH 打通 / Waydroid 跑 Android 13 / WiFi 假断线根治 + 静态 IP | 运行中，静态 IP `172.16.12.36` | [详情](moto-g5s-plus/README.md) |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
@@ -77,6 +77,7 @@ images/                     # 只放跨项目复用的素材
 | 机型 | 方向 | Release | 归档目录 |
 |---|---|---|---|
 | POCO F1（beryllium / SDM845） | iOS 16.7.16 启动镜像 + AKS 内核 | [poco-f1-ios16-boot-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-boot-v1) | [poco-f1/ios16](poco-f1/ios16/README.md) |
+| POCO F1（beryllium / SDM845） | iOS 16.7.16 音频/WiFi 封存后的稳定镜像 | [poco-f1-ios16-aud-stable-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-aud-stable-v1) | [poco-f1/ios16/docs/09](poco-f1/ios16/docs/09-音频线-实验索引.md) |
 | BQ Aquaris X3（tapion / SURO CARBON） | EDL 全分区备份 6.8 GB（3 卷） | [tapion-edl-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-edl-v1) | [tapion](tapion/README.md) |
 | BQ Aquaris X3（tapion / SURO CARBON） | Android 9 GSI 实验包（phh v123 + Magisk boot） | [tapion-gsi-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/tapion-gsi-v1) | [tapion/gsi](tapion/gsi/README.md) |
 | iRiver D8（Dicple / JZ4755） | 原厂恢复包 + 4 GB NAND dump | [d8-restore-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/d8-restore-v1) | [iriver-d8](iriver-d8/README.md) |
@@ -94,6 +95,7 @@ images/                     # 只放跨项目复用的素材
   - 本机 Mac 工作区 `Doubao/chats/2026-11-17/new-chat-1/` 也留有一份（同源）。
 - **iRiver D8**：成品恢复包 + 整片 NAND dump 分卷走 [Release d8-restore-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/d8-restore-v1)。
 - **POCO F1 / iOS 16**：启动镜像（shim boot.img ×4）+ AKS 内核走 [Release poco-f1-ios16-boot-v1](https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-boot-v1)，附 `SHA256SUMS.txt`。
+  - 音频/WiFi 封存后另发 [aud_stable](https://github.com/tomcat080/post80s-uncle/releases/tag/poco-f1-ios16-aud-stable-v1)：`sweetwlan=0`，不启动音频 stage；sha256 `b7475097…`，含 `SHA256SUMS.txt`。
   - 12.1GB 根文件系统与 21.4GB raw 镜像**不进 GitHub**（单文件上限 2GB，且体积/带宽不划算），冷备在 `rock-tom@172.16.14.177:~/backups/beryllium-poco-f1-ios16-20261119/`（67GiB / 165 文件，SHA 逐件核对通过）；重建方法见 [ios16/docs/04](poco-f1/ios16/docs/04-内核重建通道.md)。
 
 ## 关于这些记录
