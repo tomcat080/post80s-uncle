@@ -107,20 +107,18 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
   <tr><td><code>Qwen2.5-7B-Instruct-Q4_K_M.gguf</code></td><td>4.3G</td><td><code>llama_cpp</code> 进程内加载</td><td>翻译</td></tr>
 </table>
 
-<h3>3.1 翻译模型（7B GGUF）</h3>
-<pre>DST="$HOME/Whisper/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
-curl -L --fail --retry 2 --speed-time 30 --speed-limit 500000 \
-  -o "${DST}.part" \
-  "https://www.modelscope.cn/api/v1/models/lmstudio-community/Qwen2.5-7B-Instruct-GGUF/repo?Revision=master&amp;FilePath=Qwen2.5-7B-Instruct-Q4_K_M.gguf"
-mv "${DST}.part" "${DST}"</pre>
-<p><b>必须放在 <code>$HOME/Whisper/models/</code> 且保持这个文件名</b>——那是管线的 <code>MODELS_DIR</code> 默认查找位，放对了就不必写 <code>--gguf-model</code>。</p>
+<h3>3.1 按文件名找模型，别记网址</h3>
+<div class="alert">🔑 <b>下载站会改版、API 路径会变，但模型文件名本身多年不变。</b>照下面的全名去找即可——魔搭、Hugging Face 都有同一个文件，懂的人一看就知道去哪取。本文不放易过期的下载地址。</div>
+<table>
+  <tr><th>用途</th><th>模型文件名 / 目录名</th><th>体积</th></tr>
+  <tr><td>翻译</td><td><code>Qwen2.5-7B-Instruct-Q4_K_M.gguf</code></td><td>4.3G</td></tr>
+  <tr><td>识别</td><td><code>faster-whisper-large-v3/</code>（faster-whisper 格式的 large-v3）</td><td>2.9G</td></tr>
+  <tr><td>旁路富标签</td><td><code>SenseVoiceSmall/</code>（FunASR 格式）</td><td>897M</td></tr>
+</table>
+<p><code>Q4_K_M</code> 是量化精度（4bit 压缩的甜点档），<b>不是模型尺寸</b>；同系列还有 Q8（更准更胖）等量化版。全部放进 <code>$HOME/Whisper/models/</code>，GGUF 保持文件名不变——那是管线的 <code>MODELS_DIR</code> 默认查找位，放对了就不必写 <code>--gguf-model</code>。</p>
 
-<h3>3.2 识别模型（large-v3）</h3>
-<pre>HF_ENDPOINT=https://hf-mirror.com HF_HUB_ENABLE_HF_TRANSFER=1 \
-  hf download Systran/faster-whisper-large-v3 \
-  --local-dir "$HOME/Whisper/models/faster-whisper-large-v3" \
-  --local-dir-use-symlinks False</pre>
-<p class="mono">⚠️ 目录名必须是 <code>faster-whisper-&lt;档位&gt;</code>，管线按前缀硬拼路径。若目录里只有 <code>Downloads/model.bin</code>，需补齐 <code>config.json</code>、<code>preprocessor_config.json</code>（feature_size: 128）、<code>tokenizer.json</code>、<code>vocabulary.json</code>。</p>
+<h3>3.2 识别模型组装注意事项</h3>
+<p class="mono">⚠️ 目录名必须严格是 <code>faster-whisper-&lt;档位&gt;</code>，管线按前缀硬拼路径。常见翻车：目录里只有 <code>Downloads/model.bin</code>，需补齐 <code>config.json</code>、<code>model.bin</code>、<code>preprocessor_config.json</code>（feature_size: 128）、<code>tokenizer.json</code>、<code>vocabulary.json</code>，否则报 mel 维度不匹配或加载失败。</p>
 
 <h3>3.3 已清理的资产（别再装回来）</h3>
 <ul>

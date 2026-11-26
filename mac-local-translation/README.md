@@ -79,30 +79,25 @@
 | `SenseVoiceSmall/` | 897M | funasr `AutoModel` | 旁路富标签（语种/情感/BGM/事件） |
 | `Qwen2.5-7B-Instruct-Q4_K_M.gguf` | 4.3G | `llama_cpp` 进程内加载 | 翻译 |
 
-### 4.1 翻译模型（7B GGUF）
+### 4.1 模型文件清单（按文件名找，别记网址）
 
-从 ModelScope 下载单文件：
+下载站会改版、API 路径会变，但**模型文件名本身多年不变**。照着下面的全名去找即可，懂的人一看就知道去哪取：
 
-```bash
-DST="$HOME/Whisper/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
-curl -L --fail --retry 2 --speed-time 30 --speed-limit 500000 \
-  -o "${DST}.part" \
-  "https://www.modelscope.cn/api/v1/models/lmstudio-community/Qwen2.5-7B-Instruct-GGUF/repo?Revision=master&FilePath=Qwen2.5-7B-Instruct-Q4_K_M.gguf"
-mv "${DST}.part" "${DST}"
-```
+| 用途 | 模型文件名 / 目录名 | 体积 |
+|---|---|---|
+| 翻译 | `Qwen2.5-7B-Instruct-Q4_K_M.gguf` | 4.3G |
+| 识别 | `faster-whisper-large-v3/`（faster-whisper 格式的 large-v3，Systran 转换版） | 2.9G |
+| 旁路富标签 | `SenseVoiceSmall/`（FunASR 格式） | 897M |
 
-**必须放在 `$HOME/Whisper/models/` 且保持这个文件名** —— 那是管线的 `MODELS_DIR` 默认查找位，放对了就不必写 `--gguf-model`。
+其中 `Q4_K_M` 是量化精度（4bit 压缩的甜点档），**不是模型尺寸**；同系列还有 Q8（更准更胖）等量化版本。
 
-### 4.2 识别模型（large-v3）
+**放置规则**：全部放进 `$HOME/Whisper/models/`，GGUF 保持文件名不变 —— 那是管线的 `MODELS_DIR` 默认查找位，放对了就不必写 `--gguf-model`。
 
-```bash
-HF_ENDPOINT=https://hf-mirror.com HF_HUB_ENABLE_HF_TRANSFER=1 \
-  hf download Systran/faster-whisper-large-v3 \
-  --local-dir "$HOME/Whisper/models/faster-whisper-large-v3" \
-  --local-dir-use-symlinks False
-```
+### 4.2 识别模型组装注意事项
 
-⚠️ 目录名必须是 `faster-whisper-<档位>`——管线按这个前缀硬拼路径，写错会退化成联网下载。若目录里只有 `Downloads/model.bin`，需补齐 `config.json`、`preprocessor_config.json`（`feature_size: 128`）、`tokenizer.json`、`vocabulary.json`，否则会报 mel 维度不匹配或加载失败。
+`faster-whisper-large-v3` 目录名必须严格是 `faster-whisper-<档位>` —— 管线按这个前缀硬拼路径，写错会退化成联网下载。
+
+⚠️ 常见翻车：目录里只有 `Downloads/model.bin`，配套文件没跟上。完整目录需齐备 `config.json`、`model.bin`、`preprocessor_config.json`（`feature_size: 128`）、`tokenizer.json`、`vocabulary.json`，否则会报 mel 维度不匹配或加载失败。
 
 ### 4.3 已清理的资产（别再装回来）
 
