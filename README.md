@@ -3,7 +3,7 @@
 > 浙江台州，爱折腾旧电子设备的 80 后。这里是我第一手折腾记录的**原始档案库**——只记录、不教学，踩过的坑比成功更值得留底。
 
 - 🌐 **展示主页**：[zhengba-lab.pages.dev](https://zhengba-lab.pages.dev)
-- 📖 **在线教程**：[POCO F1 刷 iOS 16.7.16](https://zhengba-lab.pages.dev/tutorial-poco-f1-ios16.html)（站点项目卡 `#p/poco-f1-ios16` 是同源内容）· [Moto G5S Plus 刷 Ubuntu Touch](https://zhengba-lab.pages.dev/tutorial-g5s-plus-ubuntutouch.html)
+- 📖 **在线教程**：[POCO F1 刷 iOS 16.7.16](https://zhengba-lab.pages.dev/tutorial-poco-f1-ios16.html)（站点项目卡 `#p/poco-f1-ios16` 是同源内容）· [Moto G5S Plus 刷 Ubuntu Touch](https://zhengba-lab.pages.dev/tutorial-g5s-plus-ubuntutouch.html) · [Mac 本机本地翻译模型搭建](https://zhengba-lab.pages.dev/tutorial-mac-local-translation.html)
 - 📁 **本仓库**：过程记录、补丁、脚本、小体积素材（镜像走 Releases）
 - 🔗 **参考资料**：[司徒大哥的教学站](https://steward-fu.github.io/website/index.htm)
 
@@ -51,6 +51,7 @@ images/                     # 只放跨项目复用的素材
 │   └── linux/      # Kupfer Linux (Phosh)：过程记录待补
 ├── xiaomi-4c/      # 小米路由 4C 刷 OpenWrt（单方向）
 ├── moto-g5s-plus/  # Moto G5S Plus (sanders) 刷 Ubuntu Touch（单方向）
+├── mac-local-translation/  # Mac 本机 7B GGUF 进程内翻译搭建方案（含 local.sh 启动器）
 │   ├── README.md
 │   └── tutorial-g5s-plus-ubuntutouch.html
 ├── firmware/       # 跨机型通用原厂包 / 工具链
@@ -67,6 +68,7 @@ images/                     # 只放跨项目复用的素材
 | POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；蓝牙 HCI 三条命令 status 0；音频 PAS_INIT 在 TZ 挂死、WiFi 封存；无音频 stage 的 `aud_stable` 已发 Release | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
 | Moto G5S Plus（sanders） | 刷 Ubuntu Touch 24.04（系统出自第三方移植 [EEMuk/ubuntu-touch-motorola-sanders](https://github.com/EEMuk/ubuntu-touch-motorola-sanders)，已署名）/ SSH 打通 / Waydroid 跑 Android 13 / WiFi 假断线根治 + 静态 IP | 运行中，静态 IP `172.16.12.36` | [详情](moto-g5s-plus/README.md) |
+| Mac 本机（Intel / Sonoma） | 本地翻译模型：large-v3 识别 + Qwen2.5-7B GGUF 进程内翻译，`wsp 音频` 一行出片 | 已落地，不装 Ollama、不占端口 | [详情](mac-local-translation/README.md) |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
 | DOOV MT6771 | 安卓老机改家庭 NAS | 已落地 | 整理中 |
 

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mac 本机本地翻译模型搭建 · 7B GGUF 进程内翻译</title>
+<meta name="description" content="不装 Ollama、不起服务、不占端口：Mac 本机用 large-v3 识别 + Qwen2.5-7B GGUF 进程内翻译，一行 wsp 命令出双语字幕。含环境、模型下载、启动器、参数与踩坑。" />
+<meta name="color-scheme" content="light" />
+<style>
+:root{--bg:#fbfbf9;--fg:#16181c;--muted:#5f6673;--line:#e4e4df;--card:#fff;--accent:#0a7cff;--warn:#b4530a;--ok:#0a7c3a;--code:#f4f4f1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px}
+header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:9}
+header .inner{max-width:860px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+a.brand{text-decoration:none;color:var(--fg);font-weight:700;letter-spacing:.02em}
+header nav a{margin-left:16px;color:var(--muted);text-decoration:none;font-size:14px}
+header nav a:hover{color:var(--accent)}
+.hero{padding:44px 0 8px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:30px;line-height:1.3;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 18px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.tags span{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:#fff}
+.alert{border:1px solid var(--line);border-left:3px solid var(--warn);background:#fffaf3;padding:12px 16px;border-radius:8px;margin:18px 0;font-size:14.5px}
+.alert.ok{border-left-color:var(--ok);background:#f4fbf6}
+h2{font-size:20px;margin:40px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px;color:#22262c}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:6px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px}
+pre{background:#1c1f24;color:#e8e8e4;padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.6}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f7f7f4;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.mono{font-size:13px;color:var(--muted)}
+@media(max-width:560px){h1{font-size:24px}header nav{display:none}pre{font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="inner">
+  <a class="brand" href="https://zhengba-lab.pages.dev">⚡ 80后大叔</a>
+  <nav><a href="#why">方案</a><a href="#env">环境</a><a href="#models">模型</a><a href="#runner">启动器</a><a href="#usage">用法</a><a href="#fix">排障</a></nav>
+</div></header>
+
+<div class="wrap">
+<section class="hero">
+  <p class="kicker">Mac 本机 · Intel / macOS 14 Sonoma · 完全离线</p>
+  <h1>一行命令，把音视频翻成双语字幕：本机 7B GGUF 翻译链路实录</h1>
+  <p class="sub">不装 Ollama、不起服务、不占端口，也不用两台服务器。识别用 faster-whisper <code>large-v3</code>，翻译用 Qwen2.5-7B GGUF 在管线进程内加载，跑完即退。本文从环境地基、模型下载、启动器封装一路写到参数旋钮与踩坑。</p>
+  <div class="tags">
+    <span>faster-whisper large-v3</span><span>Qwen2.5-7B GGUF</span><span>llama_cpp</span><span>词级时间戳</span><span>零常驻</span>
+  </div>
+  <div class="alert ok">✅ <b>最短命令</b>：<code>wsp test-jp.mp3</code> → 输出 <code>~/Whisper/test-jp_双语字幕.srt</code>。首次加载 7B 权重需数十秒，之后有翻译缓存可断点续跑。</div>
+</section>
+
+<h2 id="why">一、这套方案解决什么问题</h2>
+<table>
+  <tr><th>需求</th><th>传统做法</th><th>本方案</th></tr>
+  <tr><td>翻译模型从哪来</td><td>Ollama <code>pull</code> 拉到私有仓库</td><td>GGUF 单文件直接放 <code>~/Whisper/models/</code></td></tr>
+  <tr><td>谁来推理</td><td>常驻 <code>ollama serve</code> + HTTP API</td><td><code>llama_cpp</code> 在管线进程内加载，跑完即退</td></tr>
+  <tr><td>占用</td><td>端口 11434 + 后台进程</td><td>零端口、零常驻</td></tr>
+  <tr><td>服务器依赖</td><td>断网/停机就翻不了</td><td>完全不需要服务器</td></tr>
+  <tr><td>命令长度</td><td><code>cd</code> + Python 全路径 + 一堆参数</td><td><code>wsp 音频.mp3</code></td></tr>
+</table>
+<p><b>一句话定性</b>：Ollama 在别处是「模型仓库 + 推理服务器」二合一；在本机这两层都被跳过了——下载归各家库（faster-whisper / funasr / ModelScope / HF），推理归 <code>llama_cpp</code>。</p>
+
+<div class="card">
+<h3>先分清「耳朵」和「嘴巴」</h3>
+<p>最容易混淆的地方，也是决定该装什么模型的关键：</p>
+<table>
+  <tr><th>角色</th><th>干什么</th><th>模型</th><th>备注</th></tr>
+  <tr><td><b>耳朵</b>（ASR）</td><td>把日语/英语听成文字</td><td>faster-whisper <code>large-v3</code></td><td>同族 small/turbo 功能相同，只有精度/速度差异</td></tr>
+  <tr><td><b>嘴巴</b>（翻译）</td><td>把文字翻成中文</td><td>Qwen2.5-7B-Instruct-Q4_K_M.gguf</td><td>本机只有这一颗；<code>Q4_K_M</code> 是量化精度，不是尺寸</td></tr>
+</table>
+<p class="mono">耳朵：small / large-v3-turbo / large-v3 → 已收敛只留 large-v3　｜　嘴巴：0.5B / 7B → 0.5B 复读被否，只留 7B。<code>--whisper</code> 调耳朵，<code>--gguf-model</code> 调嘴巴，互不相干。</p>
+</div>
+
+<h2 id="env">二、环境地基</h2>
+<h3>2.1 Python 运行时</h3>
+<table>
+  <tr><th>环境</th><th>已装</th><th>用途</th></tr>
+  <tr><td><code>~/Whisper/venv</code></td><td>faster_whisper 1.2.1 / av / ctranslate2</td><td>识别 + 校准；翻译要借服务器</td></tr>
+  <tr><td><b><code>~/miniforge3/envs/comfy/bin/python</code></b></td><td>上述全部 + <b><code>llama_cpp 0.3.36</code></b> + torch 2.7.1 + transformers</td><td><b>本机全流程独立</b></td></tr>
+</table>
+<pre>~/miniforge3/envs/comfy/bin/python -c "import llama_cpp, faster_whisper; print(llama_cpp.__version__)"
+# 期望输出：0.3.36</pre>
+
+<h3>2.2 为什么不修 Brew、不装 Ollama</h3>
+<p>这台是 Intel Mac / macOS 14 Sonoma，Homebrew 7.0 已把 Intel 与 Sonoma 降为 Tier 3——不再产预编译 bottle，<code>brew install ollama</code> 变成 Go 源码本地编译，16G 内存被挤爆，进程被信号 137 掐断。<b>结论：本机用不上 Ollama</b>，<code>llama_cpp</code> 已随 <code>comfy</code> 环境装好，模型文件也早就在位。Brew 原地冻结不卸、不升级。</p>
+
+<h3>2.3 依赖获取的两个坑</h3>
+<ul>
+  <li><code>llama-cpp-python</code> 在清华源是 76.6MB <b>源码包</b>、需本地编译 → 直接复用已装好的 <code>comfy</code> 环境，不要重装。</li>
+  <li>ComfyUI 目录里那颗 <code>qwen2.5-0.5b-instruct-q4_k_m.gguf</code>（469M）是给绘图提示词做中英转换的，<b>翻译质量不合格</b>（实测复读、自问自答），不能拿来做字幕。</li>
+</ul>
+
+<h2 id="models">三、模型清单与下载</h2>
+<p>当前本机 <code>~/Whisper/models/</code> 只剩三个（约 8.1G）：</p>
+<table>
+  <tr><th>模型</th><th>体积</th><th>加载者</th><th>用途</th></tr>
+  <tr><td><code>faster-whisper-large-v3/</code></td><td>2.9G</td><td>faster-whisper 直接读目录</td><td>语音识别（本机唯一 ASR 档）</td></tr>
+  <tr><td><code>SenseVoiceSmall/</code></td><td>897M</td><td>funasr <code>AutoModel</code></td><td>旁路富标签（语种/情感/BGM/事件）</td></tr>
+  <tr><td><code>Qwen2.5-7B-Instruct-Q4_K_M.gguf</code></td><td>4.3G</td><td><code>llama_cpp</code> 进程内加载</td><td>翻译</td></tr>
+</table>
+
+<h3>3.1 翻译模型（7B GGUF）</h3>
+<pre>DST="$HOME/Whisper/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+curl -L --fail --retry 2 --speed-time 30 --speed-limit 500000 \
+  -o "${DST}.part" \
+  "https://www.modelscope.cn/api/v1/models/lmstudio-community/Qwen2.5-7B-Instruct-GGUF/repo?Revision=master&amp;FilePath=Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+mv "${DST}.part" "${DST}"</pre>
+<p><b>必须放在 <code>$HOME/Whisper/models/</code> 且保持这个文件名</b>——那是管线的 <code>MODELS_DIR</code> 默认查找位，放对了就不必写 <code>--gguf-model</code>。</p>
+
+<h3>3.2 识别模型（large-v3）</h3>
+<pre>HF_ENDPOINT=https://hf-mirror.com HF_HUB_ENABLE_HF_TRANSFER=1 \
+  hf download Systran/faster-whisper-large-v3 \
+  --local-dir "$HOME/Whisper/models/faster-whisper-large-v3" \
+  --local-dir-use-symlinks False</pre>
+<p class="mono">⚠️ 目录名必须是 <code>faster-whisper-&lt;档位&gt;</code>，管线按前缀硬拼路径。若目录里只有 <code>Downloads/model.bin</code>，需补齐 <code>config.json</code>、<code>preprocessor_config.json</code>（feature_size: 128）、<code>tokenizer.json</code>、<code>vocabulary.json</code>。</p>
+
+<h3>3.3 已清理的资产（别再装回来）</h3>
+<ul>
+  <li><code>faster-whisper-small</code> / <code>large-v3-turbo</code>：与 large-v3 同族同功能，收敛到单档。</li>
+  <li><code>Qwen 0.5B GGUF</code>：实测复读、自问自答，翻译不合格。</li>
+  <li>本机 NLLB-200：蒸馏版会丢人名，服务器留完整副本做兜底即可。</li>
+</ul>
+
+<h2 id="runner">四、核心改造与启动器</h2>
+<h3>4.1 给管线加一颗 gguf 后端</h3>
+<p><code>long_pipeline.py</code> 新增 <code>--mt-backend gguf</code>，进程内加载：</p>
+<pre>from llama_cpp import Llama   # 延迟导入，不用时不吃内存
+
+llm = Llama(model_path=gguf_path, n_ctx=gguf_ctx, n_threads=gguf_threads, verbose=False)
+resp = llm.create_chat_completion(
+    messages=[{"role": "system", "content": hint_for(lang)},
+              {"role": "user", "content": text}],
+    temperature=0.2,
+)</pre>
+<p><b>必须走 <code>create_chat_completion</code> + Qwen chat 模板</b>。误用 completion 模板会让 7B 自问自答复读。翻译缓存写进 <code>work/&lt;文件名&gt;/mt.json</code>，重跑不重复翻；批量失败会按编号逐条回退。ffmpeg / ffprobe / silencedetect 的 <code>subprocess.run()</code> 一律加 <code>stdin=subprocess.DEVNULL</code>——否则在 IDE/管道环境会卡死。</p>
+
+<h3>4.2 启动器：5 行压成 1 行</h3>
+<p><code>~/Whisper/local.sh</code>（软链到 <code>/usr/local/bin/wsp</code>）的关键片段：</p>
+<pre>SRC="${BASH_SOURCE[0]}"
+while [ -L "${SRC}" ]; do          # 软链解析：别把「家」认成 /usr/local/bin
+  DIR="$(cd "$(dirname "${SRC}")" &amp;&amp; pwd)"
+  LINK="$(readlink "${SRC}")"
+  case "${LINK}" in /*) SRC="${LINK}" ;; *) SRC="${DIR}/${LINK}" ;; esac
+done
+HERE="$(cd "$(dirname "${SRC}")" &amp;&amp; pwd)"
+PY="${HOME}/miniforge3/envs/comfy/bin/python"
+
+EXTRA=(--mt-backend gguf)          # 唯一必写的开关，默认 ollama 留给服务器
+_wh=0
+for a in "$@"; do [ "$a" = "--whisper" ] &amp;&amp; _wh=1; done
+[ "${_wh}" -eq 0 ] &amp;&amp; EXTRA+=(--whisper large-v3)
+
+exec "${PY}" long_pipeline.py "${MEDIA}" "${EXTRA[@]}" "$@"   # 跑完即退</pre>
+<p><b>三个设计要点</b>：① 循环 <code>readlink</code> 摸回真实路径，否则从软链启动时找不到模型；② 未传 <code>--whisper</code> 时自动补 large-v3（本机只留这一档）；③ <code>exec</code> 替换 shell，不留后台进程。</p>
+<pre>chmod +x "$HOME/Whisper/local.sh"
+ln -sfn "$HOME/Whisper/local.sh" /usr/local/bin/wsp</pre>
+
+<h2 id="usage">五、日常用法与参数旋钮</h2>
+<pre>wsp test-jp.mp3                              # 最简：large-v3 + 7B
+wsp "/Volumes/Share/MBRBI-015/xxx.mp4"       # 网络盘素材（空格/日文路径都吃）
+wsp test-jp.mp3 --out 我的字幕.srt --batch 8 # 自定义输出与批大小
+nohup wsp 大片.mp4 &gt; "$HOME/Whisper/night.log" 2&gt;&amp;1 &amp;   # 挂夜班，跑完自动退</pre>
+<p>输出 <code>~/Whisper/&lt;文件名&gt;_双语字幕.srt</code>；缓存 <code>~/Whisper/work/&lt;文件名&gt;/mt.json</code> 自动断点续跑；词级时间戳、时间轴校准、无对白检测、逐段语种标签默认全开。</p>
+<table>
+  <tr><th>想调什么</th><th>参数</th><th>说明</th></tr>
+  <tr><td>换耳朵</td><td><code>--whisper large-v3</code></td><td>本机只剩这一档；手动传参仍优先</td></tr>
+  <tr><td>换嘴巴</td><td><code>--gguf-model &lt;路径&gt;</code></td><td>本机只有 7B；默认位已对准，不必写</td></tr>
+  <tr><td>CPU 占用</td><td><code>--gguf-threads 4</code></td><td>0=自动；Intel 老机别贪多</td></tr>
+  <tr><td>内存/吞吐</td><td><code>--batch 8</code></td><td>默认 15，调小更省内存</td></tr>
+  <tr><td>时间偏移 / 挂屏</td><td><code>--shift 0.2</code> / <code>--max-sub-dur 5</code></td><td>治字幕偏早、偏晚、挂屏</td></tr>
+  <tr><td>关闭校准</td><td><code>--no-refine</code></td><td>一般不用</td></tr>
+</table>
+<div class="alert">⚠️ <b>翻译质量没有「加个后缀就变好」的魔法开关</b>——想更准只能换更大的模型（14B/32B），这台 16G Intel 扛不动。</div>
+
+<h3>实测数据</h3>
+<table>
+  <tr><th>时间</th><th>场景</th><th>结果</th></tr>
+  <tr><td>2026-11-05</td><td>首次 7B 全链路</td><td>约 49 秒（ASR 4.4s / 7B 加载 27.2s / 翻译 15s）</td></tr>
+  <tr><td>2026-11-07</td><td><code>wsp test-jp.mp3</code> 全默认复核</td><td>2 分 03 秒（机器负载偏高），4 段双语字幕</td></tr>
+  <tr><td>2026-11-26</td><td>删 small/turbo 后默认档实跑</td><td>5.6 秒出片，校准 0 段、新重叠 0 处</td></tr>
+</table>
+<p class="mono">译文对照：「こんにちは、ゆめじです」→「你好，我是叶舟。」（服务器 3b 对照组保留片假名「我是ゆめじ」）。验收：进程无残留、11434 端口无监听、字幕无重叠。</p>
+
+<h2 id="fix">六、踩坑速查表</h2>
+<table>
+  <tr><th>现象</th><th>原因与解法</th></tr>
+  <tr><td><code>brew install ollama</code> 被 137 掐断</td><td>Intel/Sonoma 无 bottle，Go 源码编译爆内存。不用装，本机用 GGUF</td></tr>
+  <tr><td><code>llama_cpp</code> 导入失败</td><td>清华源源码包需编译；直接用 <code>comfy</code> 环境</td></tr>
+  <tr><td>译文复读、自问自答</td><td>用了 0.5B 或 completion 模板；换 7B + <code>create_chat_completion</code></td></tr>
+  <tr><td>从软链启动找不到模型</td><td>软链解析没做；见 4.2 的 <code>while [ -L ]</code></td></tr>
+  <tr><td>卡在「抽取 16k 单声道音频」</td><td>ffmpeg 监听 stdin；<code>subprocess.run(..., stdin=DEVNULL)</code></td></tr>
+  <tr><td>删掉 small 后本地跑找不到模型</td><td><code>local.sh</code> 未显式指定时补 <code>--whisper large-v3</code></td></tr>
+  <tr><td>日文/SMB 路径取不到字幕</td><td>macOS SMB 把 <code>じ</code> 存成 NFD 分解形；用「首词前缀 + <code>*</code> 通配」</td></tr>
+  <tr><td>bash 里中文后面的变量值消失</td><td>UTF-8 locale 下中文标点被吃进变量名；一律写 <code>${var}</code></td></tr>
+  <tr><td>时间轴挂屏/超前</td><td>Whisper 段级窗口吞静音；默认词级时间戳 + 校准已修，旧字幕用 <code>srt_refine.py</code></td></tr>
+</table>
+
+<h2 id="maintain">七、维护与回滚</h2>
+<ul>
+  <li><b>新增素材</b>：丢进 <code>~/Whisper/</code>，按文件名自动隔离缓存。</li>
+  <li><b>换机器</b>：拷走 GGUF 模型与 <code>local.sh</code>，在 <code>comfy</code> 环境装好 <code>llama_cpp</code> 即可。</li>
+  <li><b>回滚到服务器翻译</b>：删掉 <code>/usr/local/bin/wsp</code> 软链，改用 <code>bash long_job.sh 素材.mp4</code>（走 Ollama 千问）。服务器文件从未被本方案改动。</li>
+  <li><b>磁盘</b>：模型目录约 8.1G；废纸篓里的 small/turbo 约 2G 清空后才真正释放（Time Machine 本地快照会先 pin 住空间）。</li>
+</ul>
+
+<footer>
+  整理于 2026-11-26 · 本机 Intel Mac / macOS 14 Sonoma 实搭方案；命令均以本机实测为准，涉及删除/分区的操作请先备份。<br />
+  完整档案：<a href="https://github.com/tomcat080/post80s-uncle/tree/main/mac-local-translation" target="_blank" rel="noopener">GitHub · mac-local-translation</a>
+</footer>
+</div>
+</body>
+</html>
