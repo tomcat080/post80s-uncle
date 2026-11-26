@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moto G5S Plus 刷 Ubuntu Touch · 折腾记录</title>
+<meta name="description" content="Moto G5S Plus（sanders）从出厂 Android 8.1 到 Ubuntu Touch 24.04 的完整折腾记录：SSH 打通、Waydroid 跑 Android 13、WiFi 假断线根治与静态 IP。" />
+<meta name="color-scheme" content="light" />
+<style>
+:root{--bg:#fbfbf9;--fg:#16181c;--muted:#5f6673;--line:#e4e4df;--card:#fff;--accent:#0a7cff;--warn:#b4530a;--ok:#0a7c3a;--code:#f4f4f1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px}
+header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:9}
+header .inner{max-width:860px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+a.brand{text-decoration:none;color:var(--fg);font-weight:700;letter-spacing:.02em}
+header nav a{margin-left:16px;color:var(--muted);text-decoration:none;font-size:14px}
+header nav a:hover{color:var(--accent)}
+.hero{padding:44px 0 8px}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:30px;line-height:1.3;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 18px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.tags span{font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:#fff}
+.alert{border:1px solid var(--line);border-left:3px solid var(--warn);background:#fffaf3;padding:12px 16px;border-radius:8px;margin:18px 0;font-size:14.5px}
+.alert.ok{border-left-color:var(--ok);background:#f4fbf6}
+h2{font-size:20px;margin:40px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px;color:#22262c}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:6px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px}
+pre{background:#1c1f24;color:#e8e8e4;padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.6}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f7f7f4;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.mono{font-size:13px;color:var(--muted)}
+@media(max-width:560px){h1{font-size:24px}header nav{display:none}pre{font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="inner">
+  <a class="brand" href="https://zhengba-lab.pages.dev">⚡ 80后大叔</a>
+  <nav><a href="#pre">档案</a><a href="#steps">过程</a><a href="#waydroid">Waydroid</a><a href="#net">网络</a><a href="#fix">排障</a></nav>
+</div></header>
+
+<div class="wrap">
+<section class="hero">
+  <p class="kicker">Moto G5S Plus · sanders · Snapdragon 625</p>
+  <h1>把 2017 年的 Moto G5S Plus 折腾成一台 Ubuntu Touch 小主机</h1>
+  <p class="sub">从出厂 Android 8.1 到 Ubuntu Touch 24.04.5 LTS（Halium 11），再到能 SSH 进去、能跑整套 Android 13 的 8 核小机器。本文按时间线记录来路、关键命令、踩过的坑与回滚方法。</p>
+  <div class="tags">
+    <span>sanders</span><span>骁龙 625</span><span>Ubuntu Touch 24.04</span><span>Halium 11</span><span>Waydroid</span><span>SSH</span>
+  </div>
+  <div class="alert">⚠️ <b>史料说明</b>：详细折腾日志从「系统已刷好、开始配 SSH」那天（2026-11-04）记起。刷入 Ubuntu Touch 的安装动作本身没有逐步记录，来路部分为可确证的脉络，安装步骤标注为待补，不臆造。</div>
+</section>
+
+<h2 id="pre">一、设备档案</h2>
+<table>
+  <tr><th>项目</th><th>值</th></tr>
+  <tr><td>型号 / 代号</td><td>Moto G5S Plus / <code>sanders</code></td></tr>
+  <tr><td>序列号</td><td><code>ZY323Z4KXG</code></td></tr>
+  <tr><td>SoC</td><td>高通骁龙 625，8× Cortex-A53</td></tr>
+  <tr><td>内存 / 存储</td><td>2.8GB + 511MB swap / 29.1GB（系统 4G + <code>/home</code> 23.9G）</td></tr>
+  <tr><td>出厂系统</td><td>Android 8.1（<code>first_api_level=27</code>）</td></tr>
+  <tr><td>刷机前</td><td>被 OTA 抬到 Android 11（<code>vndk=30</code>）</td></tr>
+  <tr><td>当前系统</td><td>UBports Ubuntu Touch 24.04.5 LTS（noble / Halium 11）</td></tr>
+  <tr><td>内核</td><td><code>3.18.140-halium</code> aarch64</td></tr>
+  <tr><td>SSH 用户 / IP</td><td><code>phablet</code> / <code>172.16.12.36:21</code>（静态）</td></tr>
+</table>
+<p><b>关键机制</b>：<code>/etc/ssh</code>、<code>/etc/netplan</code>、<code>/etc/NetworkManager/system-connections</code>、<code>/etc/writable</code> 等目录都从 <code>/userdata</code>（<code>/dev/mmcblk0p54</code>）bind-mount 而来 —— 这就是所有改动都能持久、OTA 也不覆盖的原因。</p>
+
+<h2 id="steps">二、来路：从出厂到 Ubuntu Touch</h2>
+<ol>
+  <li><b>出厂 Android 8.1</b>（<code>first_api_level=27</code> 证实），一路 OTA 被抬到 Android 11。</li>
+  <li>解锁 Bootloader → 通过 UBports Installer 刷入 <b>Ubuntu Touch 24.04.5 LTS</b>（noble 通道，Halium 11 底座）。</li>
+  <li>系统落定后网络与 SSH 默认都关闭 —— 后续折腾全部围绕「把它变成可远程操作的 Linux 小主机」展开。</li>
+</ol>
+<p class="mono">版本来源：UBports 设备页 devices.ubports.com/#/sanders · apt 源 <code>deb http://repo.ubports.com/ 24.04-1.x main</code></p>
+
+<h3>SSH 打通（2026-11-04）</h3>
+<p>默认连不上是因为：<code>ssh.socket</code>/<code>ssh.service</code> 都 disabled，且 <code>50-lxc-android-config.conf</code> 写死 <code>PasswordAuthentication=no</code>。三步落地，全部持久：</p>
+<pre><code># 1) 00- 排在 50- 之前，sshd 采用 first-value-wins
+sudo tee /etc/ssh/sshd_config.d/00-tom-local.conf &lt;&lt;'EOF'
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+EOF
+
+# 2) Mac 公钥写入 authorized_keys
+cat ~/.ssh/id_ed25519.pub | ssh phablet@&lt;手机IP&gt; 'mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys'
+
+# 3) 启用 ssh.socket（开机自启）
+sudo systemctl enable --now ssh.socket</code></pre>
+<p>三条通道实测全通：WiFi 公钥免密、WiFi 密码、<code>adb forward tcp:2222 tcp:22</code> 的 USB 转发。会话内 sudo 提权 root 成功，开机自启在重启后复测通过。</p>
+<div class="alert ok">回滚：<code>sudo rm /etc/ssh/sshd_config.d/00-tom-local.conf</code> + <code>sudo systemctl disable --now ssh.socket</code> + 删掉对应公钥。</div>
+
+<h2 id="waydroid">三、Waydroid：在 Ubuntu Touch 里跑 Android 13</h2>
+<p>地基全现成：<code>waydroid 1.5.1</code> 系统自带，内核 <code>3.18.140-halium</code> 已带全套 binder 节点与 ASHMEM / USER_NS / CGROUPS 等必需选项。<b>没有 <code>/dev/kvm</code></b> → 全虚拟化不可行；无 binderfs → Docker/redroid 不可行。</p>
+<p>镜像托管在 SourceForge，直连仅 ~84KB/s（870MB 要 3 小时）。按实测配方走 <b>16 线代理并发</b>，121 秒下完：</p>
+<pre><code># 关键坑：先 HEAD 解析带签名的最终地址，不能直接给 aria2 一个 /download 页面
+URL=$(curl -sS -I -L -o /dev/null -w '%{url_effective}' "&lt;sourceforge 页面&gt;")
+aria2c "$URL" --all-proxy=http://127.0.0.1:12334 -x16 -s16 -k1M --user-agent=Mozilla/5.0</code></pre>
+<ul>
+  <li>system：<code>lineage-20.0-20260927-VANILLA-waydroid_arm64-system.zip</code>（870MB / 121 秒）</li>
+  <li>vendor：<code>lineage-18.1-20260402-HALIUM_11-waydroid_arm64-vendor.zip</code>（41MB / 17 秒）</li>
+  <li>两个 zip 的 SHA256 与 OTA 清单完全一致，确认官方原包。</li>
+</ul>
+<pre><code># 镜像放 /home（根分区只剩 686M，system.img 有 1.86GiB）
+mkdir -p /home/phablet/waydroid-images/images
+sudo mount -o remount,rw /
+sudo ln -s /home/phablet/waydroid-images/images /etc/waydroid-extra/images
+waydroid init   # 命中预置镜像、跳过 OTA</code></pre>
+<p><b>实测</b>：Session / Container 均 RUNNING，<b>Android 13（LineageOS 20）</b>，152 个包，launcher3 / system_server / surfaceflinger 全在跑。代价是常驻约 484MB 内存。</p>
+
+<h2 id="net">四、WiFi 假断线根治 + 静态 IP（2026-11-26）</h2>
+<p><b>症状</b>：熄屏一段时间后，WiFi 图标仍显示已连接，实际数据流已断。断久了 DHCP 租约失效 → 重连换 IP（本机从 <code>172.16.9.29</code> 漂到 <code>172.16.12.36</code>）→ 按旧 IP SSH 全部超时。</p>
+<p><b>根因</b>：NetworkManager 全局省电 <code>/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf</code> 写死 <code>wifi.powersave = 3</code>。该文件在只读根分区，改不了 —— 但可以在连接级覆盖。</p>
+<pre><code>sudo nmcli connection modify "K2P" \
+  ipv4.method manual \
+  ipv4.addresses 172.16.12.36/21 \
+  ipv4.gateway 172.16.10.1 \
+  ipv4.dns "114.114.114.114" \
+  wifi.powersave 2          # 2 = disable，覆盖全局的 3
+sudo nmcli connection up "K2P"</code></pre>
+<p><b>验证</b>：路由从 <code>proto dhcp</code> 变 <code>proto static</code>，<code>powersave=disable</code>，ping 0 丢包，SSH 重连成功。回滚：<code>sudo nmcli connection modify "K2P" ipv4.method auto wifi.powersave 0</code> 再 up。</p>
+<div class="alert">静态 IP 钉在设备上，若路由器 DHCP 日后把 <code>172.16.12.36</code> 分给别人会冲突（当前是它在用，风险低）。彻底稳妥需在路由器做 DHCP 保留，本次按需求未动路由器。</div>
+
+<h2 id="fix">五、踩坑速查表</h2>
+<table>
+  <tr><th>坑</th><th>现象</th><th>解法</th></tr>
+  <tr><td>sshd 配置不生效</td><td>密码登录被拒</td><td><code>00-</code> 前缀覆盖 <code>50-</code>，first-value-wins</td></tr>
+  <tr><td>重启后以为没起来</td><td>adb 无设备、ping 不通</td><td>启动慢 + adbd 未自启；ssh.socket 是好的，等 1~2 分钟</td></tr>
+  <tr><td>镜像下载 84KB/s</td><td>3 小时</td><td>16 线代理并发，121 秒完成</td></tr>
+  <tr><td>SourceForge 403</td><td>aria2 拿到 HTML</td><td>先 <code>curl -I -L -w '%{url_effective}'</code> 解析签名直链</td></tr>
+  <tr><td>WiFi 假断线</td><td>图标亮着但断网、IP 漂移</td><td>连接级 <code>wifi.powersave 2</code> + 静态 IP</td></tr>
+  <tr><td>ARP incomplete</td><td>SSH 超时</td><td>设备整个离线，唤醒/查新 IP，别死磕</td></tr>
+  <tr><td>根分区只剩 686M</td><td>大镜像放不下</td><td>镜像放 <code>/home</code>，软链绕过</td></tr>
+</table>
+
+<h2>六、待补</h2>
+<ul>
+  <li><b>安装实录缺失</b>：从 Android 11 解锁 BL 到 UBports Installer 刷入 UT 24.04 的逐步命令与截图未留存，建议补记。</li>
+  <li><b>GitHub 分享页核查（2026-11-26）</b>：UBports 设备页 devices.ubports.com/#/sanders 仍在；ubports/devices 仓库未查到 sanders 设备定义的近期提交。用户记忆中的具体教程仓库 URL 未记录，如有链接可补查。</li>
+</ul>
+
+<footer>
+  记录整理于 2026-11-26 · 命令均以本机实测为准，涉及 sudo / 分区的操作请先备份。<br />
+  <a class="mono" href="https://zhengba-lab.pages.dev">← 返回项目展示站</a>
+</footer>
+</div>
+</body>
+</html>
