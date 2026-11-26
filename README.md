@@ -66,7 +66,7 @@ images/                     # 只放跨项目复用的素材
 | POCO F1 | 刷 Kupfer Linux (Phosh) | 已刷入 | [详情](poco-f1/linux/README.md) |
 | POCO F1 | 刷 iOS 16.7.16（xnu-8796，纯 CPU） | 真机进桌面 + SSH 可操作；自编 `btscan` 已扫到 6 台 BLE 设备；蓝牙用户态（`bluetoothd`）仍在攻；内核重建通道已打通 | [详情](poco-f1/ios16/README.md) |
 | 小米路由 4C | Breed + OpenWrt | 已完成 | 整理中 |
-| Moto G5S Plus（sanders） | 刷 Ubuntu Touch 24.04 / SSH 打通 / Waydroid 跑 Android 13 / WiFi 假断线根治 + 静态 IP | 运行中，静态 IP `172.16.12.36` | [详情](moto-g5s-plus/README.md) |
+| Moto G5S Plus（sanders） | 刷 Ubuntu Touch 24.04（系统出自第三方移植 [EEMuk/ubuntu-touch-motorola-sanders](https://github.com/EEMuk/ubuntu-touch-motorola-sanders)，已署名）/ SSH 打通 / Waydroid 跑 Android 13 / WiFi 假断线根治 + 静态 IP | 运行中，静态 IP `172.16.12.36` | [详情](moto-g5s-plus/README.md) |
 | TS240 | 本地 Ollama 模型流水线 | 在跑，已优化 13 轮 | 整理中 |
 | DOOV MT6771 | 安卓老机改家庭 NAS | 已落地 | 整理中 |
 

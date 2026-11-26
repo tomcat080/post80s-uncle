@@ -29,16 +29,52 @@
 
 ## 二、来路：从出厂到 Ubuntu Touch
 
-> ⚠️ **史料说明**：本机详细的折腾日志是从「系统已经刷好、开始配 SSH」那天（2026-11-04）记起的。**刷入 Ubuntu Touch 的安装动作本身没有留下逐步记录**，以下为可确证的来路脉络，安装步骤留待补充（见文末"待补"）。
+### 🙏 出处先行：本项目基于 EEMuk 的第三方移植
+
+> **本机刷入的 Ubuntu Touch 24.04（Halium 11 / 24.04-1.x）并非 UBports 官方 OTA 直接支持，而是第三方开发者 EEMuk 的社区移植成果。** 下文的安装命令、已知问题均整理自其公开仓库，**此处明确署名，不掠人之美**。
+
+- **原始仓库**：https://github.com/EEMuk/ubuntu-touch-motorola-sanders （作者 `EEMuk`，2026-10-23 创建）
+- **配套内核**：https://github.com/EEMuk/android_kernel_motorola_sanders （分支 `halium-11`，基于 PixelExperience 11 的 3.18 内核 + Halium + AppArmor + 驱动修复）
+- **唯一 release**：`24.04-20261023`（2026-10-23 发布，仓库至今仅此一版）
+- 本机系统的 apt 源 `deb http://repo.ubports.com/ 24.04-1.x main` 与该移植的 `24.04-1.x` 通道一致；设备底层为 PixelExperience 11 vendor 镜像（保留在 `oem` 分区）。
+
+### 安装步骤（整理自 EEMuk 仓库 README，非本文原创）
+
+**前置条件**
+1. 已解锁 Bootloader，电脑装好 `fastboot`。
+2. **先备份** `persist`、`modemst1`、`modemst2`、`fsg` —— 它们存着 IMEI 与校准数据，丢了别处找不回来。
+
+**五步刷入**
+
+从 [latest release](https://github.com/EEMuk/ubuntu-touch-motorola-sanders/releases) 下载 `boot.img`、`vendor-pe11-sanders.zip`、`ubuntu.zip`，解压两个 zip，进 bootloader 后：
+
+```bash
+fastboot flash oem vendor-pe11-sanders.img
+fastboot flash boot boot.img
+fastboot flash system ubuntu.img
+fastboot erase userdata        # 会清掉手机全部数据
+fastboot reboot                # 首次启动格式化 userdata，需几分钟
+```
+
+> 要点：`vendor-pe11-sanders.img` 是原版 PixelExperience 11 vendor，**无需先刷 PE11**；此机 vendor 分区在 `oem`，故替换原厂 `oem`。`fastboot -w` 在此 bootloader 上无效（报不出分区大小），故用 `erase userdata`。
+
+**功能状态（原仓库实测）**：显示/触控/GPU/视频播放、WiFi/热点/蓝牙、通话（VoLTE/2G）/短信/移动数据、前后摄像头与录像、GPS、指纹与各类传感器、USB MTP/网络共享、Waydroid 均可用；NFC/FM 收音机、ViLTE 视频通话不支持；双卡/MMS、有线耳机未测。
+
+**已知问题**：`24.04-20261023` 首装后时钟可能错约 30 分钟（网站报证书错误），开关一次 WiFi 即同步；待机耗电约 2–3%/小时（原仓库称下一版修复，但未发布）。
+
+**回退安卓**：按常规刷回 ROM 或备份即可。
+
+### 本机实际脉络与史料说明
+
+> 本机详细折腾日志从「系统已刷好、开始配 SSH」那天（2026-11-04）记起，**本机亲自执行的安装动作没留逐字记录**；上面的安装步骤来自原作者仓库，不是本机实测复述。
 
 1. **出厂 Android 8.1**（`first_api_level=27` 证实），一路 OTA 被抬到 Android 11。
-2. 解锁 Bootloader → 通过 UBports Installer 刷入 **Ubuntu Touch 24.04.5 LTS**（noble 通道，Halium 11 底座）。
+2. 解锁 Bootloader → 刷入上述 EEMuk 移植的 **Ubuntu Touch 24.04.5 LTS**（noble / Halium 11 底座）。
 3. 系统落定后，网络与 SSH 默认都是关闭状态——接下来的折腾全部围绕"把它变成一台可远程操作的 Linux 小主机"展开。
 
-**可查证的版本来源**：
-- UBports 设备页：`https://devices.ubports.com/#/sanders`
+**其他可查证来源**
+- UBports 官方设备页（仅作机型参考，**该机不在官方 OTA 支持列表**）：`https://devices.ubports.com/#/sanders`
 - 系统 apt 源：`deb http://repo.ubports.com/ 24.04-1.x main`
-- UBports devices 仓库（`sanders` 设备定义）：`https://github.com/ubports/devices`（本次检查未查到设备文件的近期提交，详见文末"GitHub 分享页核查"）
 
 ---
 
@@ -180,20 +216,25 @@ sudo nmcli connection up "K2P"
 
 ---
 
-## 七、待补 / 后续
+## 七、共享页更新核查（2026-11-26）
 
-- **安装实录缺失**：从 Android 11 解锁 BL 到 UBports Installer 刷入 UT 24.04 的逐步命令与截图未留存，建议补记（解锁状态、刷入用的 ROM 包版本、Installer 选项）。
-- **GitHub 分享页核查**：见下节，本次核查未发现设备定义的近期更新。
-- Waydroid 触摸/图形界面、SadTalker 等是同一台设备的其他支线，不在本文范围。
+**用户澄清**：所谓"原始 GitHub 分享页"**不是 UBports 官方设备页，而是第三方网友 EEMuk 制作的移植分享页** —— 即 `https://github.com/EEMuk/ubuntu-touch-motorola-sanders`，也就是本文系统的真正出处。首次核查误查了 UBports 官方页，本节为更正后的结论。
 
----
+### 核查结果：停更，仍停留在首发状态
 
-## 附：GitHub 分享页核查（2026-11-26）
+| 项目 | 状态 |
+|---|---|
+| 仓库创建 | 2026-10-23 |
+| 最后一次代码提交 | **2026-10-23**（`8bfad45`，README 补充已知问题）|
+| 最后一次 push | 2026-10-26（仅 release 资源上传，无代码变更）|
+| Release | **仅 `24.04-20261023` 一版**（2026-10-23 发布）|
+| 活跃度 | 0 star / 0 fork / 0 open issue；未归档但无后续提交 |
+| README 承诺的"下一版修复时钟问题" | **至今一个多月未兑现** |
 
-用户要求核查"原始 GitHub 分享页有没有更新"。核查结果：
+**结论**：作者停留在 10-23 的首发成果，没有再更新。这也解释了为什么本机系统是 `24.04-20261023` 那一批的 24.04.5 —— 之后没有新版可升。仓库仍是该机型**唯一**给出完整 Halium 11 移植与 fastboot 安装步骤的公开来源，故本文第二节完整引用并署名。
 
-- `https://devices.ubports.com/#/sanders` —— UBports 官方设备页仍在，为前端应用，标注 UT 24.04 系列。
-- `https://github.com/ubports/devices` —— 查询 `sanders` 设备定义文件的近期提交，API 返回空/无匹配，未发现明确的最近更新记录。
-- **不确定项**：用户记忆中的"GitHub 分享页"若指某个具体刷机教程仓库（而非 UBports 官方设备定义），本地史料未记录其 URL。若有链接可补查。
+### 为什么必须给出处
 
-> 本记录由折腾日志整理而来，命令均以本机实测为准；涉及 sudo / 分区的操作请先备份。
+Ubuntu Touch 官方设备页 `devices.ubports.com/#/sanders` 只列机型，并不提供该机的可刷系统；本机跑的 24.04 是 EEMuk 编译打包的第三方移植。若文中只写"刷了 Ubuntu Touch"而不指出处，等于拿了别人的成果不说来源——**故在第二节开头专设署名块，并在文末保留此核查记录**。
+
+> 本记录由折腾日志整理而来，命令均以本机实测为准；安装步骤整理自 EEMuk 仓库（已署名），涉及 sudo / 分区的操作请先备份。

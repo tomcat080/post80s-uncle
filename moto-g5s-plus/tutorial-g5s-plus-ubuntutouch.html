@@ -54,7 +54,8 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
   <div class="tags">
     <span>sanders</span><span>骁龙 625</span><span>Ubuntu Touch 24.04</span><span>Halium 11</span><span>Waydroid</span><span>SSH</span>
   </div>
-  <div class="alert">⚠️ <b>史料说明</b>：详细折腾日志从「系统已刷好、开始配 SSH」那天（2026-11-04）记起。刷入 Ubuntu Touch 的安装动作本身没有逐步记录，来路部分为可确证的脉络，安装步骤标注为待补，不臆造。</div>
+  <div class="alert">🙏 <b>出处先行</b>：本机的 Ubuntu Touch 24.04 并非 UBports 官方支持，而是第三方开发者 <b>EEMuk</b> 的社区移植。安装步骤整理自其公开仓库 <a href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">github.com/EEMuk/ubuntu-touch-motorola-sanders</a>，此处明确署名，不掠人之美。</div>
+  <div class="alert">⚠️ <b>史料说明</b>：本机亲自执行的安装动作没留逐字记录；下方安装步骤来自原作者仓库（已署名），本机折腾日志从「系统已刷好、开始配 SSH」那天（2026-11-04）记起。</div>
 </section>
 
 <h2 id="pre">一、设备档案</h2>
@@ -73,12 +74,31 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
 <p><b>关键机制</b>：<code>/etc/ssh</code>、<code>/etc/netplan</code>、<code>/etc/NetworkManager/system-connections</code>、<code>/etc/writable</code> 等目录都从 <code>/userdata</code>（<code>/dev/mmcblk0p54</code>）bind-mount 而来 —— 这就是所有改动都能持久、OTA 也不覆盖的原因。</p>
 
 <h2 id="steps">二、来路：从出厂到 Ubuntu Touch</h2>
+<div class="alert">🙏 <b>原始出处（第三方移植，非官方）</b><br>
+原始仓库：<a href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">EEMuk/ubuntu-touch-motorola-sanders</a>（作者 <code>EEMuk</code>，2026-10-23 创建）<br>
+配套内核：<a href="https://github.com/EEMuk/android_kernel_motorola_sanders" target="_blank" rel="noopener">EEMuk/android_kernel_motorola_sanders</a>（分支 <code>halium-11</code>，基于 PixelExperience 11 的 3.18 内核 + Halium + AppArmor + 驱动修复）<br>
+唯一 release：<code>24.04-20261023</code>（2026-10-23 发布）。本机 apt 源 <code>deb http://repo.ubports.com/ 24.04-1.x main</code> 与该移植通道一致。</div>
+
+<h3>安装步骤（整理自 EEMuk 仓库 README，非本文原创）</h3>
+<p><b>前置</b>：① 解锁 Bootloader，电脑装 <code>fastboot</code>；② 备份 <code>persist</code> / <code>modemst1</code> / <code>modemst2</code> / <code>fsg</code>（存 IMEI 与校准数据，丢了找不回）。</p>
+<p>从 <a href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders/releases" target="_blank" rel="noopener">latest release</a> 下载 <code>boot.img</code>、<code>vendor-pe11-sanders.zip</code>、<code>ubuntu.zip</code>，解压后进 bootloader：</p>
+<pre><code>fastboot flash oem vendor-pe11-sanders.img
+fastboot flash boot boot.img
+fastboot flash system ubuntu.img
+fastboot erase userdata        # 会清空手机全部数据
+fastboot reboot                # 首次启动格式化 userdata，需几分钟</code></pre>
+<p>要点：<code>vendor-pe11-sanders.img</code> 是原版 PixelExperience 11 vendor，<b>无需先刷 PE11</b>；此机 vendor 分区在 <code>oem</code>，故替换原厂 <code>oem</code>。<code>fastboot -w</code> 在此 bootloader 上无效（报不出分区大小）。</p>
+<p><b>功能状态（原仓库实测）</b>：显示/触控/GPU/视频、WiFi/热点/蓝牙、通话(VoLTE/2G)/短信/移动数据、前后摄与录像、GPS、指纹与传感器、USB MTP/网络共享、Waydroid 均可用；NFC/FM 收音机、ViLTE 视频通话不支持；双卡/MMS、有线耳机未测。<br>
+<b>已知问题</b>：<code>24.04-20261023</code> 首装后时钟可能错约 30 分钟（网站报证书错误），开关一次 WiFi 即同步；待机耗电约 2–3%/小时（原仓库称下一版修复，但未发布）。<br>
+<b>回退安卓</b>：按常规刷回 ROM 或备份即可。</p>
+
+<h3>本机脉络</h3>
 <ol>
   <li><b>出厂 Android 8.1</b>（<code>first_api_level=27</code> 证实），一路 OTA 被抬到 Android 11。</li>
-  <li>解锁 Bootloader → 通过 UBports Installer 刷入 <b>Ubuntu Touch 24.04.5 LTS</b>（noble 通道，Halium 11 底座）。</li>
+  <li>解锁 Bootloader → 刷入上述 EEMuk 移植的 <b>Ubuntu Touch 24.04.5 LTS</b>（noble / Halium 11 底座）。</li>
   <li>系统落定后网络与 SSH 默认都关闭 —— 后续折腾全部围绕「把它变成可远程操作的 Linux 小主机」展开。</li>
 </ol>
-<p class="mono">版本来源：UBports 设备页 devices.ubports.com/#/sanders · apt 源 <code>deb http://repo.ubports.com/ 24.04-1.x main</code></p>
+<p class="mono">UBports 官方设备页 devices.ubports.com/#/sanders 仅作机型参考，<b>该机不在官方 OTA 支持列表</b>。</p>
 
 <h3>SSH 打通（2026-11-04）</h3>
 <p>默认连不上是因为：<code>ssh.socket</code>/<code>ssh.service</code> 都 disabled，且 <code>50-lxc-android-config.conf</code> 写死 <code>PasswordAuthentication=no</code>。三步落地，全部持久：</p>
@@ -141,14 +161,22 @@ sudo nmcli connection up "K2P"</code></pre>
   <tr><td>根分区只剩 686M</td><td>大镜像放不下</td><td>镜像放 <code>/home</code>，软链绕过</td></tr>
 </table>
 
-<h2>六、待补</h2>
-<ul>
-  <li><b>安装实录缺失</b>：从 Android 11 解锁 BL 到 UBports Installer 刷入 UT 24.04 的逐步命令与截图未留存，建议补记。</li>
-  <li><b>GitHub 分享页核查（2026-11-26）</b>：UBports 设备页 devices.ubports.com/#/sanders 仍在；ubports/devices 仓库未查到 sanders 设备定义的近期提交。用户记忆中的具体教程仓库 URL 未记录，如有链接可补查。</li>
-</ul>
+<h2>六、原始 GitHub 分享页核查（2026-11-26）</h2>
+<div class="alert">🙏 用户澄清：所谓「原始 GitHub 分享页」<b>不是 UBports 官方设备页，而是第三方网友 EEMuk 制作的移植分享页</b> —— <a href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">EEMuk/ubuntu-touch-motorola-sanders</a>，即本机系统的真正出处。首次核查误查了官方页，本节为更正后的结论。</div>
+<table>
+  <tr><th>项目</th><th>状态</th></tr>
+  <tr><td>仓库创建</td><td>2026-10-23</td></tr>
+  <tr><td>最后一次代码提交</td><td><b>2026-10-23</b>（<code>8bfad45</code>，README 补充已知问题）</td></tr>
+  <tr><td>最后一次 push</td><td>2026-10-26（仅 release 资源上传，无代码变更）</td></tr>
+  <tr><td>Release</td><td><b>仅 <code>24.04-20261023</code> 一版</b>（2026-10-23 发布）</td></tr>
+  <tr><td>活跃度</td><td>0 star / 0 fork / 0 open issue；未归档但无后续提交</td></tr>
+  <tr><td>README 承诺的「下一版修复时钟问题」</td><td><b>至今一个多月未兑现</b></td></tr>
+</table>
+<p><b>结论</b>：作者停留在 10-23 的首发成果，没有再更新 —— 本机系统正是这批 <code>24.04-20261023</code> 的 24.04.5，之后无新版可升。该仓库仍是该机型唯一给出完整 Halium 11 移植与 fastboot 安装步骤的公开来源，故第二节完整引用并署名。</p>
+<p class="mono">UBports 官方设备页只列机型，不提供该机可刷系统；若只写「刷了 Ubuntu Touch」而不指出处，等于拿了别人的成果不说来源 —— 故专设署名块，并保留此核查记录。</p>
 
 <footer>
-  记录整理于 2026-11-26 · 命令均以本机实测为准，涉及 sudo / 分区的操作请先备份。<br />
+  记录整理于 2026-11-26 · 安装步骤整理自 <a class="mono" href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">EEMuk/ubuntu-touch-motorola-sanders</a>（已署名）· 本机命令以实测为准，涉及 sudo / 分区的操作请先备份。<br />
   <a class="mono" href="https://zhengba-lab.pages.dev">← 返回项目展示站</a>
 </footer>
 </div>
