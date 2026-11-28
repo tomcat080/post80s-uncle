@@ -1,7 +1,7 @@
 # Moto G5S Plus（sanders）刷 Ubuntu Touch 与后续折腾全记录
 
 > 设备代号 `sanders` · 序列号 `ZY323Z4KXG` · 骁龙 625 / 3GB+32GB
-> 记录时间：2026-11-26 · 状态：Ubuntu Touch 24.04.5 LTS 稳定运行，SSH + Waydroid 可用
+> 记录时间：2026-11-26（镜像归档补充 2026-11-28）· 状态：Ubuntu Touch 24.04.5 LTS 稳定运行，SSH + Waydroid 可用
 
 这是一台 2017 年的 Moto G5S Plus，从出厂安卓机一路折腾成局域网里一台能 SSH 进去、还能跑整套 Android 13 的 8 核小主机。本文按时间线记录它的"前世今生"、关键操作命令、踩过的坑与回滚方法。
 
@@ -236,5 +236,44 @@ sudo nmcli connection up "K2P"
 ### 为什么必须给出处
 
 Ubuntu Touch 官方设备页 `devices.ubports.com/#/sanders` 只列机型，并不提供该机的可刷系统；本机跑的 24.04 是 EEMuk 编译打包的第三方移植。若文中只写"刷了 Ubuntu Touch"而不指出处，等于拿了别人的成果不说来源——**故在第二节开头专设署名块，并在文末保留此核查记录**。
+
+---
+
+## 八、本地镜像归档（2026-11-28 补充）
+
+> 这批镜像是当初刷机下载后转移到外置盘的原始素材，路径 `/Volumes/MBP8,2/G5Splus/`。整理清单与 SHA256 如下，便于核对与二次分发。**镜像本体属 EEMuk 移植产物，署名见第二节；此处只做留档与校验，不掠原创之功。**
+
+### 8.1 文件清单与 SHA256
+
+| 文件 | 字节数 | 约 | SHA256 | 用途 |
+|---|---|---|---|---|
+| `boot.img` | 16,777,216 | 16M | `31670a94259b08968fe1b2da6c6dcd2851acd58c4ce277a287284ff7fdea6be1` | fastboot flash boot |
+| `vendor-pe11-sanders.img` | 805,306,368 | 768M | `02769c9f1eee8793c0304b02cac4b6e97f39de35fbe0d5c4ac6f24e51ed07ef4` | fastboot flash oem（解包自 zip）|
+| `twrp-3.7.0_9-0-sanders.img` | 19,111,936 | 18M | `d39561a6d924fe189f24eea5607fc1c63ff4d1efb0686b0985cda0374f74344f` | 第三方 Recovery（备用）|
+| `ubuntu.img` | 4,089,446,400 | 3.8G | `987dea12cc7008f61ad7e47f598c57726ef79f0a1b9a0f366ccad1fd51bbc9c9` | fastboot flash system（解包自 ubuntu.zip）|
+| `ubuntu.zip` | 985,127,608 | 939M | `a269ddc9d545cf33361dfb7628e8a72d7a7c34e02cb53b8dbf3ac393aca1f191` | 原始压缩包，解包得 ubuntu.img |
+| `vendor-pe11-sanders.zip` | 144,228,900 | 138M | `98a6f93abe9bbfb56fb7babf6afe8cc45eb4f8c3d12e30d7751c2019a9c30fc7` | 原始 vendor 包，解包得 oem.img |
+| `e-1.21-r-20240505-UNOFFICIAL-sanders.zip` | 992,918,033 | 947M | `6c639c6d8559ef449ff56523f3c56e6106a1dc6bf1c4fb9f5fe399ab2ebb888a` | /e/ OS 1.21 社区 ROM（另一条刷机路线，未实测）|
+
+合计约 **6.5GB**。`*.img` 与 `*.zip` 是同一份数据的解包前后两态（ubuntu.zip→ubuntu.img、vendor.zip→vendor.img），按需取一份即可。
+
+### 8.2 下载页
+
+| 来源 | 地址 | 说明 |
+|---|---|---|
+| **EEMuk 原始 release**（推荐） | https://github.com/EEMuk/ubuntu-touch-motorola-sanders/releases | boot.img / vendor zip / ubuntu zip 的官方出处 |
+| **本站 GitHub 归档** | https://github.com/tomcat080/post80s-uncle/releases | 本仓库 Releases 页；若有大文件分卷归档，在此列出 |
+| 配套内核源码 | https://github.com/EEMuk/android_kernel_motorola_sanders | 分支 `halium-11` |
+| /e/ OS 1.21 sanders | https://community.e.foundation/ （搜 `sanders` / `e-1.21-r-20240505`）| 上面那个 e- 包的社区出处，未实测 |
+
+> 说明：GitHub Release 单个 asset 上限 2GB。`ubuntu.img`（3.8GB）如需进 Release 必须分卷（`split -b 1900m`），或直接给 `ubuntu.zip`（939M）由使用者本地解包。授权上传需用户提供 GitHub PAT（会话中临时给、不落盘）。
+
+### 8.3 校验方法
+
+```bash
+# 在镜像所在目录
+shasum -a 256 *.img *.zip
+# 与 8.1 表格逐行比对；一致即为原始出品，未被篡改
+```
 
 > 本记录由折腾日志整理而来，命令均以本机实测为准；安装步骤整理自 EEMuk 仓库（已署名），涉及 sudo / 分区的操作请先备份。
