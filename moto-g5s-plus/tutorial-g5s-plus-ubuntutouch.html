@@ -43,7 +43,7 @@ footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);color:v
 <body>
 <header><div class="inner">
   <a class="brand" href="https://zhengba-lab.pages.dev">⚡ 80后大叔</a>
-  <nav><a href="#pre">档案</a><a href="#steps">过程</a><a href="#waydroid">Waydroid</a><a href="#net">网络</a><a href="#fix">排障</a></nav>
+  <nav><a href="#pre">档案</a><a href="#steps">过程</a><a href="#download">下载</a><a href="#waydroid">Waydroid</a><a href="#net">网络</a><a href="#fix">排障</a></nav>
 </div></header>
 
 <div class="wrap">
@@ -100,6 +100,22 @@ fastboot reboot                # 首次启动格式化 userdata，需几分钟</
 </ol>
 <p class="mono">UBports 官方设备页 devices.ubports.com/#/sanders 仅作机型参考，<b>该机不在官方 OTA 支持列表</b>。</p>
 
+<h2 id="download">三、镜像下载与校验（本地归档 2026-11-28）</h2>
+<div class="alert ok">📦 <b>下载页</b>：镜像本体与校验清单统一归档在 <a href="https://github.com/tomcat080/post80s-uncle/releases" target="_blank" rel="noopener">本站 GitHub Releases</a>；原始出处仍是 <a href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders/releases" target="_blank" rel="noopener">EEMuk releases</a>（已署名）。本站只做留档与校验，不掠原创之功。</div>
+<table>
+  <tr><th>文件</th><th>大小</th><th>SHA256（前 16 位）</th><th>用途</th></tr>
+  <tr><td><code>boot.img</code></td><td>16M</td><td><code>31670a94259b0896…</code></td><td>fastboot flash boot</td></tr>
+  <tr><td><code>ubuntu.zip</code></td><td>939M</td><td><code>a269ddc9d545cf33…</code></td><td>解包得 ubuntu.img（3.8G），flash system</td></tr>
+  <tr><td><code>ubuntu.img</code></td><td>3.8G</td><td><code>987dea12cc7008f6…</code></td><td>系统镜像（Release 单文件 2G 上限，需分卷）</td></tr>
+  <tr><td><code>vendor-pe11-sanders.zip</code></td><td>138M</td><td><code>98a6f93abe9bbfb56…</code></td><td>解包得 oem.img，fastboot flash oem</td></tr>
+  <tr><td><code>vendor-pe11-sanders.img</code></td><td>768M</td><td><code>02769c9f1eee8793…</code></td><td>PixelExperience 11 原版 vendor</td></tr>
+  <tr><td><code>twrp-3.7.0_9-0-sanders.img</code></td><td>18M</td><td><code>d39561a6d924fe18…</code></td><td>第三方 Recovery（备用）</td></tr>
+  <tr><td><code>e-1.21-r-20240505…sanders.zip</code></td><td>947M</td><td><code>6c639c6d8559ef44…</code></td><td>/e/ OS 1.21 社区 ROM（另一条路线，未实测）</td></tr>
+</table>
+<p>合计约 <b>6.5GB</b>。<code>*.img</code> 与 <code>*.zip</code> 是同一数据的解包前后两态，按需取一份即可。完整 SHA256 见 <a href="https://github.com/tomcat080/post80s-uncle/blob/main/moto-g5s-plus/README.md" target="_blank" rel="noopener">GitHub README 第八节</a>。</p>
+<pre><code># 校验（在镜像目录执行，与 README 表格逐行比对）\nshasum -a 256 *.img *.zip</code></pre>
+<p class="mono">说明：GitHub Release 单个 asset 上限 2GB，3.8G 的 ubuntu.img 需 <code>split -b 1900m</code> 分卷，或直接下 939M 的 ubuntu.zip 本地解包。镜像上传需会话中临时授权 token。</p>
+
 <h3>SSH 打通（2026-11-04）</h3>
 <p>默认连不上是因为：<code>ssh.socket</code>/<code>ssh.service</code> 都 disabled，且 <code>50-lxc-android-config.conf</code> 写死 <code>PasswordAuthentication=no</code>。三步落地，全部持久：</p>
 <pre><code># 1) 00- 排在 50- 之前，sshd 采用 first-value-wins
@@ -118,7 +134,7 @@ sudo systemctl enable --now ssh.socket</code></pre>
 <p>三条通道实测全通：WiFi 公钥免密、WiFi 密码、<code>adb forward tcp:2222 tcp:22</code> 的 USB 转发。会话内 sudo 提权 root 成功，开机自启在重启后复测通过。</p>
 <div class="alert ok">回滚：<code>sudo rm /etc/ssh/sshd_config.d/00-tom-local.conf</code> + <code>sudo systemctl disable --now ssh.socket</code> + 删掉对应公钥。</div>
 
-<h2 id="waydroid">三、Waydroid：在 Ubuntu Touch 里跑 Android 13</h2>
+<h2 id="waydroid">四、Waydroid：在 Ubuntu Touch 里跑 Android 13</h2>
 <p>地基全现成：<code>waydroid 1.5.1</code> 系统自带，内核 <code>3.18.140-halium</code> 已带全套 binder 节点与 ASHMEM / USER_NS / CGROUPS 等必需选项。<b>没有 <code>/dev/kvm</code></b> → 全虚拟化不可行；无 binderfs → Docker/redroid 不可行。</p>
 <p>镜像托管在 SourceForge，直连仅 ~84KB/s（870MB 要 3 小时）。按实测配方走 <b>16 线代理并发</b>，121 秒下完：</p>
 <pre><code># 关键坑：先 HEAD 解析带签名的最终地址，不能直接给 aria2 一个 /download 页面
@@ -136,7 +152,7 @@ sudo ln -s /home/phablet/waydroid-images/images /etc/waydroid-extra/images
 waydroid init   # 命中预置镜像、跳过 OTA</code></pre>
 <p><b>实测</b>：Session / Container 均 RUNNING，<b>Android 13（LineageOS 20）</b>，152 个包，launcher3 / system_server / surfaceflinger 全在跑。代价是常驻约 484MB 内存。</p>
 
-<h2 id="net">四、WiFi 假断线根治 + 静态 IP（2026-11-26）</h2>
+<h2 id="net">五、WiFi 假断线根治 + 静态 IP（2026-11-26）</h2>
 <p><b>症状</b>：熄屏一段时间后，WiFi 图标仍显示已连接，实际数据流已断。断久了 DHCP 租约失效 → 重连换 IP（本机从 <code>172.16.9.29</code> 漂到 <code>172.16.12.36</code>）→ 按旧 IP SSH 全部超时。</p>
 <p><b>根因</b>：NetworkManager 全局省电 <code>/etc/NetworkManager/conf.d/default-wifi-powersave-on.conf</code> 写死 <code>wifi.powersave = 3</code>。该文件在只读根分区，改不了 —— 但可以在连接级覆盖。</p>
 <pre><code>sudo nmcli connection modify "K2P" \
@@ -149,7 +165,7 @@ sudo nmcli connection up "K2P"</code></pre>
 <p><b>验证</b>：路由从 <code>proto dhcp</code> 变 <code>proto static</code>，<code>powersave=disable</code>，ping 0 丢包，SSH 重连成功。回滚：<code>sudo nmcli connection modify "K2P" ipv4.method auto wifi.powersave 0</code> 再 up。</p>
 <div class="alert">静态 IP 钉在设备上，若路由器 DHCP 日后把 <code>172.16.12.36</code> 分给别人会冲突（当前是它在用，风险低）。彻底稳妥需在路由器做 DHCP 保留，本次按需求未动路由器。</div>
 
-<h2 id="fix">五、踩坑速查表</h2>
+<h2 id="fix">六、踩坑速查表</h2>
 <table>
   <tr><th>坑</th><th>现象</th><th>解法</th></tr>
   <tr><td>sshd 配置不生效</td><td>密码登录被拒</td><td><code>00-</code> 前缀覆盖 <code>50-</code>，first-value-wins</td></tr>
@@ -176,7 +192,7 @@ sudo nmcli connection up "K2P"</code></pre>
 <p class="mono">UBports 官方设备页只列机型，不提供该机可刷系统；若只写「刷了 Ubuntu Touch」而不指出处，等于拿了别人的成果不说来源 —— 故专设署名块，并保留此核查记录。</p>
 
 <footer>
-  记录整理于 2026-11-26 · 安装步骤整理自 <a class="mono" href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">EEMuk/ubuntu-touch-motorola-sanders</a>（已署名）· 本机命令以实测为准，涉及 sudo / 分区的操作请先备份。<br />
+  记录整理于 2026-11-26 · 镜像归档 2026-11-28 · 安装步骤整理自 <a class="mono" href="https://github.com/EEMuk/ubuntu-touch-motorola-sanders" target="_blank" rel="noopener">EEMuk/ubuntu-touch-motorola-sanders</a>（已署名）· 镜像下载见 <a class="mono" href="https://github.com/tomcat080/post80s-uncle/releases" target="_blank" rel="noopener">本站 GitHub Releases</a> · 本机命令以实测为准，涉及 sudo / 分区的操作请先备份。<br />
   <a class="mono" href="https://zhengba-lab.pages.dev">← 返回项目展示站</a>
 </footer>
 </div>
